@@ -1,0 +1,54 @@
+/* Mermaid Diagram Styles */
+.mermaid-wrapper {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+.mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+}
+
+/* Mermaid theme customization */
+.mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+    fill: var(--accent-primary);
+    stroke: var(--accent-primary);
+    stroke-width: 2px;
+}
+
+.mermaid .edgeLabel {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.mermaid .label {
+    color: white;
+    font-family: inherit;
+}
+
+/* Code block for mermaid syntax */
+pre code.language-mermaid {
+    display: block;
+    padding: 1rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}

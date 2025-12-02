@@ -30,9 +30,11 @@
     "@tiptap/react": "^3.11.1",
     "@tiptap/starter-kit": "^3.11.1",
     "lucide-react": "^0.294.0",
+    "mermaid": "^11.12.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
+    "tiptap-extension-mermaid": "^0.0.0",
     "zustand": "^4.4.7"
   },
   "devDependencies": {

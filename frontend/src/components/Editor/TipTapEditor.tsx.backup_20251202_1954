@@ -13,7 +13,6 @@ import { useEffect, useState, useRef } from 'react'
 import SaveStatusIndicator from '../UI/SaveStatusIndicator'
 import './TipTapEditor.css'
 import './TipTapExtensions.css'
-import './MermaidStyles.css'
 
 interface TipTapEditorProps {
   content?: string
@@ -260,18 +259,6 @@ export default function TipTapEditor({
             title="Inserir fórmula matemática"
           >
             ∑
-          </button>
-          <button
-            onClick={() => {
-              const mermaidCode = prompt('Digite o código Mermaid:\n\nExemplo:\ngraph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;')
-              if (mermaidCode) {
-                editor.chain().focus().insertContent(`\n\`\`\`mermaid\n${mermaidCode}\n\`\`\`\n`).run()
-              }
-            }}
-            className="menu-btn"
-            title="Inserir diagrama Mermaid"
-          >
-            📊
           </button>
         </div>
 

@@ -275,7 +275,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
 
                                 {/* Lista de capítulos para seleção */}
                                 <div className="chapters-selector">
-                                    {outline.chapters.map((chapter: any) => (
+                                    {outline?.chapters?.map((chapter: any) => (
                                         <button
                                             key={chapter.number}
                                             className={`chapter-selector-btn ${selectedChapter?.number === chapter.number ? 'active' : ''
@@ -284,7 +284,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                                         >
                                             Cap. {chapter.number}
                                         </button>
-                                    ))}
+                                    )) || <p style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Nenhum capítulo disponível</p>}
                                 </div>
 
                                 {/* Detalhes do capítulo selecionado */}
