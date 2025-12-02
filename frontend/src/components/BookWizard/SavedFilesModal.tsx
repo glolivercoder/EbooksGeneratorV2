@@ -1,0 +1,153 @@
+import { useState, useEffect } from 'react'
+import { X, BookOpen, Trash2, Clock } from 'lucide-react'
+import { useBookStore } from '../../stores/bookStore'
+import './SavedFilesModal.css'
+
+interface SavedFile {
+    id: string
+    title: string
+    description: string
+    total_chapters: number
+    created_at: string
+    last_modified: string
+    last_saved?: string
+}
+
+interface SavedFilesModalProps {
+    isOpen: boolean
+    onClose: () => void
+    onLoad: (fileData: any) => void
+}
+
+export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesModalProps) {
+    const { currentBook } = useBookStore()
+    const [savedFiles, setSavedFiles] = useState<SavedFile[]>([])
+
+    // Carregar arquivos salvos quando modal abre
+    useEffect(() => {
+        if (isOpen) {
+            loadSavedFiles()
+        }
+    }, [isOpen])
+
+    const loadSavedFiles = () => {
+        try {
+            const storeData = localStorage.getItem('book-store')
+            console.log('SavedFilesModal - localStorage raw:', storeData)
+
+            if (storeData) {
+                const parsed = JSON.parse(storeData)
+                console.log('SavedFilesModal - parsed:', parsed)
+
+                const files: SavedFile[] = []
+
+                // Verificar currentBook no state
+                if (parsed.state?.currentBook) {
+                    files.push(parsed.state.currentBook)
+                    console.log('✓ Encontrado currentBook:', parsed.state.currentBook.title)
+                }
+
+                setSavedFiles(files)
+                console.log('SavedFilesModal - Total de arquivos:', files.length)
+            } else {
+                console.log('SavedFilesModal - Nenhum dado no localStorage')
+                setSavedFiles([])
+            }
+        } catch (error) {
+            console.error('SavedFilesModal - Erro ao carregar:', error)
+            setSavedFiles([])
+        }
+    }
+
+    const handleLoad = (file: SavedFile) => {
+        console.log('SavedFilesModal - Carregando arquivo:', file.title)
+        onLoad(file)
+        onClose()
+    }
+
+    const handleDelete = (fileId: string) => {
+        if (window.confirm('Deseja realmente deletar este arquivo?')) {
+            localStorage.removeItem('book-store')
+            setSavedFiles([])
+            console.log('✓ Arquivo deletado')
+        }
+    }
+
+    const formatDate = (isoString?: string) => {
+        if (!isoString) return 'Nunca'
+        try {
+            const date = new Date(isoString)
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        } catch {
+            return 'Data inválida'
+        }
+    }
+
+    if (!isOpen) return null
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content saved-files-modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>
+                        <BookOpen size={24} />
+                        Arquivos Salvos
+                    </h2>
+                    <button className="close-btn" onClick={onClose}>
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className="modal-body">
+                    {savedFiles.length === 0 ? (
+                        <div className="empty-state">
+                            <BookOpen size={48} />
+                            <p>Nenhum arquivo salvo encontrado</p>
+                            <small>Crie um novo outline para começar</small>
+                        </div>
+                    ) : (
+                        <div className="files-list">
+                            {savedFiles.map(file => (
+                                <div
+                                    key={file.id}
+                                    className={`file-item ${currentBook?.id === file.id ? 'active' : ''}`}
+                                    onClick={() => handleLoad(file)}
+                                >
+                                    <div className="file-info">
+                                        <h3>{file.title || 'Sem título'}</h3>
+                                        <p className="file-description">{file.description || 'Sem descrição'}</p>
+                                        <div className="file-meta">
+                                            <span>
+                                                <BookOpen size={14} />
+                                                {file.total_chapters || 0} capítulos
+                                            </span>
+                                            <span>
+                                                <Clock size={14} />
+                                                {formatDate(file.last_saved || file.last_modified)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="delete-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleDelete(file.id)
+                                        }}
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}

@@ -1,0 +1,205 @@
+import { useState } from 'react'
+import PromptOptimizer from './PromptOptimizer'
+import OutlineEditor from './OutlineEditor'
+import GenerationProgress from './GenerationProgress'
+import BookEditor from './BookEditor'
+import './BookWizard.css'
+
+interface ChapterNotes {
+    [chapterNumber: number]: string
+}
+
+export default function BookWizard() {
+    const [step, setStep] = useState(1)
+    const [outline, setOutline] = useState<any>(null)
+    const [bookId, setBookId] = useState<string | null>(null)
+    const [selectedChapterIndex, setSelectedChapterIndex] = useState(0)
+    const [chapterNotes, setChapterNotes] = useState<ChapterNotes>({})
+    const [researchLinks, setResearchLinks] = useState<string[]>([])
+    const [newLink, setNewLink] = useState('')
+
+    const handlePromptComplete = (prompt: string, outlineData: any) => {
+        setOutline(outlineData)
+        setStep(2)
+        setSelectedChapterIndex(0)
+    }
+
+    const handleOutlineComplete = async (finalOutline: any) => {
+        setOutline(finalOutline)
+
+        // Iniciar geração completa
+        try {
+            const response = await fetch('/api/book/generate-full', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ outline: finalOutline })
+            })
+            const data = await response.json()
+
+            if (data.status === 'started') {
+                setBookId(data.book_id)
+                setStep(3)
+            }
+        } catch (error) {
+            console.error('Erro ao iniciar geração:', error)
+        }
+    }
+
+    const handleGenerationComplete = (bookData: any) => {
+        setStep(4)
+    }
+
+    const handleNoteChange = (chapterNumber: number, value: string) => {
+        setChapterNotes((prev) => ({
+            ...prev,
+            [chapterNumber]: value
+        }))
+    }
+
+    const handleAddLink = () => {
+        const value = newLink.trim()
+        if (!value) return
+        setResearchLinks((prev) => [...prev, value])
+        setNewLink('')
+    }
+
+    const handleRemoveLink = (index: number) => {
+        setResearchLinks((prev) => prev.filter((_, i) => i !== index))
+    }
+
+    const chapters = outline?.chapters || []
+    const currentChapter =
+        chapters.length > 0 && selectedChapterIndex >= 0 && selectedChapterIndex < chapters.length
+            ? chapters[selectedChapterIndex]
+            : null
+
+    return (
+        <div className="book-wizard">
+            {/* Prompt Optimizer sempre visível no topo */}
+            <div className="wizard-section prompt-section">
+                <PromptOptimizer
+                    onComplete={handlePromptComplete}
+                    initialPrompt={outline?.refined_prompt || ''}
+                    isLocked={step > 1}
+                    onReset={() => {
+                        setStep(1)
+                        setOutline(null)
+                        setBookId(null)
+                        setSelectedChapterIndex(0)
+                        setChapterNotes({})
+                        setResearchLinks([])
+                        setNewLink('')
+                    }}
+                />
+            </div>
+
+            {/* Conteúdo dinâmico dos passos abaixo com sidebar à direita */}
+            <div className="wizard-main-layout wizard-section content-section">
+                <div className="wizard-main-content">
+                    {step === 2 && outline && (
+                        <OutlineEditor
+                            initialOutline={outline}
+                            onBack={() => setStep(1)}
+                            onComplete={handleOutlineComplete}
+                        />
+                    )}
+
+                    {step === 3 && bookId && (
+                        <GenerationProgress
+                            bookId={bookId}
+                            onComplete={handleGenerationComplete}
+                        />
+                    )}
+
+                    {step === 4 && bookId && <BookEditor bookId={bookId} />}
+                </div>
+
+                {/* Sidebar global: aparece após existir outline */}
+                {outline && chapters.length > 0 && (
+                    <aside className="wizard-sidebar">
+                        <div className="sidebar-section">
+                            <h3>📚 Escopo dos Capítulos</h3>
+                            <p className="sidebar-hint">
+                                Base para a organização do livro após a otimização do prompt.
+                            </p>
+                            <div className="sidebar-chapters">
+                                {chapters.map((ch: any, index: number) => (
+                                    <button
+                                        key={ch.number}
+                                        className={`sidebar-chapter-item ${
+                                            index === selectedChapterIndex ? 'active' : ''
+                                        }`}
+                                        onClick={() => setSelectedChapterIndex(index)}
+                                    >
+                                        <span className="num">{ch.number}</span>
+                                        <span className="title">{ch.title}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {currentChapter && (
+                            <div className="sidebar-section">
+                                <h4>Tópicos do Capítulo {currentChapter.number}</h4>
+                                <ul className="topics-list">
+                                    {(currentChapter.key_topics || []).map((topic: string, idx: number) => (
+                                        <li key={idx}>{topic}</li>
+                                    ))}
+                                </ul>
+                                <label className="sidebar-label" htmlFor="chapter-notes">
+                                    Notas adicionais / novos temas
+                                </label>
+                                <textarea
+                                    id="chapter-notes"
+                                    className="sidebar-textarea"
+                                    rows={4}
+                                    placeholder="Adicione aqui outros assuntos ou pontos que deseja abordar neste capítulo."
+                                    value={chapterNotes[currentChapter.number] || ''}
+                                    onChange={(e) => handleNoteChange(currentChapter.number, e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        <div className="sidebar-section sidebar-links">
+                            <h3>🔗 Links de Pesquisa</h3>
+                            <p className="sidebar-hint">
+                                Links usados pelo agente de pesquisa / RAG. Você pode adicionar ou
+                                ajustar manualmente.
+                            </p>
+                            <div className="link-input-row">
+                                <input
+                                    type="text"
+                                    placeholder="Cole um link de pesquisa..."
+                                    value={newLink}
+                                    onChange={(e) => setNewLink(e.target.value)}
+                                />
+                                <button className="btn btn-secondary btn-sm" onClick={handleAddLink}>
+                                    Adicionar
+                                </button>
+                            </div>
+                            <ul className="links-list">
+                                {researchLinks.map((link, index) => (
+                                    <li key={index}>
+                                        <a href={link} target="_blank" rel="noopener noreferrer">
+                                            {link}
+                                        </a>
+                                        <button
+                                            type="button"
+                                            className="link-remove"
+                                            onClick={() => handleRemoveLink(index)}
+                                        >
+                                            ×
+                                        </button>
+                                    </li>
+                                ))}
+                                {researchLinks.length === 0 && (
+                                    <li className="links-empty">Nenhum link adicionado ainda.</li>
+                                )}
+                            </ul>
+                        </div>
+                    </aside>
+                )}
+            </div>
+        </div>
+    )
+}

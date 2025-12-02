@@ -1,0 +1,120 @@
+/* BackupTab styles */
+
+.backup-tab .path-input-row {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.backup-tab .path-input-row input {
+  flex: 1;
+}
+
+.backup-tab .auto-backup-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.backup-tab .interval-input {
+  width: 60px;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.backup-tab .interval-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.backup-tab .last-backup-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.backup-tab .backup-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.backup-tab .backup-actions label.btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.backup-tab .backup-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-sm);
+  background-color: rgba(198, 151, 116, 0.05);
+  border: 1px solid rgba(198, 151, 116, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Switch (toggle) style */
+.backup-tab .switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.backup-tab .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.backup-tab .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.backup-tab .slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.backup-tab input:checked + .slider {
+  background-color: var(--accent-primary);
+}
+
+.backup-tab input:focus + .slider {
+  box-shadow: 0 0 0 2px rgba(198, 151, 116, 0.2);
+}
+
+.backup-tab input:checked + .slider:before {
+  transform: translateX(24px);
+}

@@ -1,0 +1,187 @@
+import { useEffect, useState } from 'react'
+import { Save, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
+import { useConfig } from '../../stores/configStore'
+import toast from 'react-hot-toast'
+import BackupTab from './BackupTab'
+import './SettingsPanel.css'
+import './BackupTab.css'
+
+function SettingsPanel() {
+    const [activeTab, setActiveTab] = useState('apis')
+    const { apiConfig, updateAPIConfig, loadAPIConfig, saveAPIConfig, testConnections } = useConfig()
+    const [isTesting, setIsTesting] = useState(false)
+    const [testResults, setTestResults] = useState<any>(null)
+    const [isLoadingKeys, setIsLoadingKeys] = useState(true)
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                await loadAPIConfig()
+            } catch (error) {
+                toast.error('Erro ao carregar chaves de API')
+                console.error(error)
+            } finally {
+                setIsLoadingKeys(false)
+            }
+        }
+        load()
+    }, [loadAPIConfig])
+
+    const handleSave = async () => {
+        try {
+            await saveAPIConfig()
+            toast.success('Chaves de API salvas e aplicadas no backend!')
+        } catch (error) {
+            toast.error('Erro ao salvar chaves de API')
+            console.error(error)
+        }
+    }
+
+    const handleTest = async () => {
+        setIsTesting(true)
+        try {
+            const results = await testConnections()
+            setTestResults(results)
+
+            const allConnected = results.every((r: any) => r.status === 'connected')
+            if (allConnected) {
+                toast.success('Todas as conexões testadas com sucesso!')
+            } else {
+                toast.error('Algumas conexões falharam. Verifique as chaves.')
+            }
+        } catch (error) {
+            toast.error('Erro ao testar conexões')
+            console.error(error)
+        } finally {
+            setIsTesting(false)
+        }
+    }
+
+    return (
+        <div className="settings-panel">
+            <div className="settings-header">
+                <h2>⚙️ Configurações</h2>
+                <p>Configure suas chaves de API e backups</p>
+            </div>
+
+            <div className="settings-tabs">
+                <button
+                    className={`tab-btn ${activeTab === 'apis' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('apis')}
+                >
+                    APIs
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'backup' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('backup')}
+                >
+                    Backup
+                </button>
+            </div>
+
+            <div className="settings-content">
+                {activeTab === 'apis' && (
+                    <div className="tab-content">
+                        {isLoadingKeys && <p>Carregando chaves de API...</p>}
+                {/* OpenRouter */}
+                <div className="setting-group">
+                    <label htmlFor="openrouter">
+                        <strong>OpenRouter API Key</strong>
+                        <span className="label-hint">Para acesso a múltiplos LLMs</span>
+                    </label>
+                    <input
+                        id="openrouter"
+                        type="password"
+                        placeholder="sk-or-xxxxxxxxxxxxxxxx"
+                        value={apiConfig.openrouterKey}
+                        onChange={(e) => updateAPIConfig({ openrouterKey: e.target.value })}
+                    />
+                    <small className="help-text">
+                        Obtenha em: <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">openrouter.ai</a>
+                    </small>
+                </div>
+
+                {/* Gemini */}
+                <div className="setting-group">
+                    <label htmlFor="gemini">
+                        <strong>Gemini API Key</strong>
+                        <span className="label-hint">Google Generative AI</span>
+                    </label>
+                    <input
+                        id="gemini"
+                        type="password"
+                        placeholder="AIxxxxxxxxxxxxxxxx"
+                        value={apiConfig.geminiKey}
+                        onChange={(e) => updateAPIConfig({ geminiKey: e.target.value })}
+                    />
+                    <small className="help-text">
+                        Obtenha em: <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+                    </small>
+                </div>
+
+                {/* Pixabay */}
+                <div className="setting-group">
+                    <label htmlFor="pixabay">
+                        <strong>Pixabay API Key</strong>
+                        <span className="label-hint">Para busca de imagens (opcional)</span>
+                    </label>
+                    <input
+                        id="pixabay"
+                        type="password"
+                        placeholder="xxxxxxxxx-xxxxxxxxxxxxxxx"
+                        value={apiConfig.pixabayKey}
+                        onChange={(e) => updateAPIConfig({ pixabayKey: e.target.value })}
+                    />
+                    <small className="help-text">
+                        Obtenha em: <a href="https://pixabay.com/api/docs/" target="_blank" rel="noopener noreferrer">pixabay.com/api</a>
+                    </small>
+                </div>
+
+                {/* Test Results */}
+                {testResults && (
+                    <div className="test-results">
+                        <h3>Resultados dos Testes:</h3>
+                        {testResults.map((result: any, index: number) => (
+                            <div key={index} className={`test-result ${result.status}`}>
+                                {result.status === 'connected' ? (
+                                    <CheckCircle className="status-icon success" size={20} />
+                                ) : (
+                                    <XCircle className="status-icon error" size={20} />
+                                )}
+                                <div>
+                                    <strong>{result.service}</strong>
+                                    <p>{result.message}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Actions */}
+                <div className="settings-actions">
+                    <button className="btn btn-primary" onClick={handleSave}>
+                        <Save size={18} />
+                        <span>Salvar Configurações</span>
+                    </button>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={handleTest}
+                        disabled={isTesting}
+                    >
+                        <RefreshCw size={18} className={isTesting ? 'spinning' : ''} />
+                        <span>{isTesting ? 'Testando...' : 'Testar Conexões'}</span>
+                    </button>
+                </div>
+            </div>
+                )}
+                {activeTab === 'backup' && (
+                    <div className="tab-content">
+                        <BackupTab />
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+export default SettingsPanel

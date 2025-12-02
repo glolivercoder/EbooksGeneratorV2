@@ -1,0 +1,39 @@
+RESUMO DO BACKUP - Ebook Generator V2
+=====================================
+
+Data/Hora: 2025-12-01 16:30:14
+Status: CONCLUÍDO
+
+ARQUIVOS BACKUPEADOS: 18
+Tamanho estimado: ~50KB
+
+CONFIGURAÇÃO (3 arquivos):
+✓ .env - Variáveis de ambiente
+✓ .env.example - Template
+✓ task_aprimoramento.md - Tarefas
+
+BACKEND (5 arquivos):
+✓ main.py - API FastAPI
+✓ config/settings.py - Configurações
+✓ services/llm_client.py - Cliente LLM
+✓ services/openrouter_models.py - Agente OpenRouter
+✓ agents/orchestrator.py - Orquestrador
+
+FRONTEND (10 arquivos):
+✓ App.tsx/App.css - Aplicação principal
+✓ stores/configStore.ts - Configurações
+✓ stores/themeStore.ts - Tema
+✓ components/LLMSelector/* - Seletor LLM
+✓ components/BookWizard/* - Assistente
+✓ components/Settings/* - Configurações
+✓ components/RichTextEditor/* - Editor
+
+FUNCIONALIDADES PRINCIPAIS:
+- Integração OpenAI completa
+- Seletor de modelos LLM dinâmico
+- Agente OpenRouter Models
+- Filtros e persistência
+- Teste de conexões
+
+BACKUP CRIADO COM SUCESSO!
+Pronto para testar o sistema.

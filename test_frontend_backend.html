@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Frontend-Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .result { margin: 20px 0; padding: 10px; background: #f5f5f5; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de Conexão Frontend-Backend</h1>
+    
+    <button onclick="testHealth()">🏥 Testar Health</button>
+    <button onclick="testGenerateFull()">📚 Testar Generate Full</button>
+    <button onclick="testActiveBooks()">📖 Testar Active Books</button>
+    
+    <div id="result" class="result"></div>
+    
+    <script>
+        async function testHealth() {
+            const result = document.getElementById('result');
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Health OK: ${data.status}</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Health Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testGenerateFull() {
+            const result = document.getElementById('result');
+            try {
+                const response = await fetch('/api/book/generate-full', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        outline: {
+                            book_title: "Teste",
+                            chapters: [{number: 1, title: "Cap 1"}]
+                        }
+                    })
+                });
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Generate Full OK: ${data.status}<br>Book ID: ${data.book_id}</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Generate Full Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testActiveBooks() {
+            const result = document.getElementById('result');
+            try {
+                const response = await fetch('/api/books/active');
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Active Books OK: ${data.total_active} livros ativos</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Active Books Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

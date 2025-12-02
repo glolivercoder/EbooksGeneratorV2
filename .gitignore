@@ -1,0 +1,52 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ebook data
+ebooks_output/
+*.pdf
+*.epub
+
+# Vector stores
+*.vectorstore/
+*.pkl
+
+# Backups
+.env.backup.*
+
+# Frontend
+node_modules/
+dist/
+.cache/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/

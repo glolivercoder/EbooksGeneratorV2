@@ -1,0 +1,227 @@
+.tiptap-editor {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tiptap-editor.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.loading-placeholder {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.menu-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.menu-group {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.editor-content {
+  padding: var(--spacing-lg);
+  min-height: 400px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.editor-content .ProseMirror {
+  outline: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
+
+.editor-content .ProseMirror p {
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.editor-content .ProseMirror h1,
+.editor-content .ProseMirror h2,
+.editor-content .ProseMirror h3,
+.editor-content .ProseMirror h4,
+.editor-content .ProseMirror h5,
+.editor-content .ProseMirror h6 {
+  margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.editor-content .ProseMirror h1 {
+  font-size: 2em;
+  line-height: 1.2;
+}
+
+.editor-content .ProseMirror h2 {
+  font-size: 1.5em;
+  line-height: 1.3;
+}
+
+.editor-content .ProseMirror h3 {
+  font-size: 1.25em;
+  line-height: 1.4;
+}
+
+.editor-content .ProseMirror h4 {
+  font-size: 1.1em;
+  line-height: 1.4;
+}
+
+.editor-content .ProseMirror h5 {
+  font-size: 1em;
+  line-height: 1.5;
+}
+
+.editor-content .ProseMirror h6 {
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.editor-content .ProseMirror ul,
+.editor-content .ProseMirror ol {
+  margin: 0 0 var(--spacing-md) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.editor-content .ProseMirror li {
+  margin: var(--spacing-xs) 0;
+}
+
+.editor-content .ProseMirror ul.bullet-list {
+  list-style-type: disc;
+}
+
+.editor-content .ProseMirror ol.ordered-list {
+  list-style-type: decimal;
+}
+
+.editor-content .ProseMirror strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.editor-content .ProseMirror em {
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+.editor-content .ProseMirror u {
+  text-decoration: underline;
+  color: var(--text-primary);
+}
+
+.editor-content .ProseMirror blockquote {
+  margin: var(--spacing-md) 0;
+  padding-left: var(--spacing-md);
+  border-left: 3px solid var(--primary);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.editor-content .ProseMirror code {
+  background: var(--bg-secondary);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: var(--text-primary);
+}
+
+.editor-content .ProseMirror pre {
+  background: var(--bg-secondary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin: var(--spacing-md) 0;
+}
+
+.editor-content .ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.editor-content .ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.editor-content .ProseMirror a:hover {
+  color: var(--primary-dark);
+}
+
+/* Placeholder */
+.editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-secondary);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Focus styles */
+.editor-content .ProseMirror-focused {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Selection styles */
+.editor-content .ProseMirror ::selection {
+  background: var(--primary-light);
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .menu-bar {
+    padding: var(--spacing-xs);
+    gap: 2px;
+  }
+
+  .menu-group {
+    padding: 0 var(--spacing-xs);
+  }
+
+  .menu-btn {
+    width: 28px;
+    height: 28px;
+    font-size: var(--font-size-xs);
+  }
+
+  .editor-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .editor-content {
+    padding: var(--spacing-md);
+    min-height: 300px;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .editor-content .ProseMirror a {
+    color: var(--primary);
+  }
+
+  .editor-content .ProseMirror a:hover {
+    color: var(--primary-light);
+  }
+}
