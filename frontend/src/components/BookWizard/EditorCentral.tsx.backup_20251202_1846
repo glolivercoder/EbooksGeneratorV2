@@ -1,9 +1,7 @@
 import { useBookStore } from '../../stores/bookStore'
-import { FolderOpen, Save, FileDown } from 'lucide-react'
 import RichTextEditor from '../RichTextEditor/RichTextEditor'
 import '../RichTextEditor/RichTextEditor.css'
 import '../BookWizard/BookWizard.css'
-import './EditorCentralToolbar.css'
 
 interface EditorCentralProps {
   bookId?: string | null
@@ -107,75 +105,6 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
     }, 300)
   }
 
-  const handleOpenFiles = () => {
-    // Trigger saved files modal (via prop or global state)
-    alert('Funcionalidade: Abrir modal de arquivos salvos')
-  }
-
-  const handleSaveToDisk = () => {
-    if (!htmlContent) {
-      alert('Nenhum conteúdo para salvar')
-      return
-    }
-
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${currentBook?.title || 'documento'}.html`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    console.log('✓ Arquivo HTML salvo no dispositivo')
-  }
-
-  const handleExportPDF = () => {
-    if (!htmlContent) {
-      alert('Nenhum conteúdo para exportar')
-      return
-    }
-
-    // Menu de exportação
-    const format = prompt('Escolha o formato:\n1 - PDF\n2 - Rich Text (RTF)\n3 - Word (DOCX)\n4 - LibreOffice (ODT)\n\nDigite o número:', '1')
-
-    if (!format) return
-
-    const fileName = currentBook?.title || 'documento'
-
-    switch (format) {
-      case '1':
-        // PDF export
-        const printWindow = window.open('', '_blank')
-        if (printWindow) {
-          printWindow.document.write(`<html><head><title>${fileName}</title></head><body>`)
-          printWindow.document.write(htmlContent)
-          printWindow.document.write('</body></html>')
-          printWindow.document.close()
-          printWindow.print()
-        }
-        break
-      case '2':
-        // RTF export (simplified HTML to RTF conversion)
-        const rtfContent = `{\\rtf1\\ansi\\deff0 ${htmlContent.replace(/<[^>]*>/g, '')}}`
-        const rtfBlob = new Blob([rtfContent], { type: 'application/rtf' })
-        const rtfUrl = URL.createObjectURL(rtfBlob)
-        const rtfLink = document.createElement('a')
-        rtfLink.href = rtfUrl
-        rtfLink.download = `${fileName}.rtf`
-        rtfLink.click()
-        URL.revokeObjectURL(rtfUrl)
-        break
-      case '3':
-      case '4':
-        alert('Exportação DOCX/ODT: Use "Salvar como HTML" e abra no Word/LibreOffice para converter')
-        handleSaveToDisk()
-        break
-      default:
-        alert('Formato inválido')
-    }
-  }
-
   // Detectar se é Markdown e converter
   const isMarkdown = content && (content.includes('##') || content.includes('**'))
   const htmlContent = isMarkdown ? convertMarkdownToHTML(content) : content
@@ -206,30 +135,7 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
     <div className="editor-central">
       <div className="editor-header">
         <h2>Editor de Conteúdo</h2>
-        <div className="editor-toolbar">
-          <button
-            className="toolbar-btn"
-            onClick={handleOpenFiles}
-            title="Abrir arquivos salvos"
-          >
-            <FolderOpen size={18} />
-          </button>
-          <button
-            className="toolbar-btn"
-            onClick={handleSaveToDisk}
-            title="Salvar no dispositivo"
-          >
-            <Save size={18} />
-          </button>
-          <button
-            className="toolbar-btn"
-            onClick={handleExportPDF}
-            title="Exportar (PDF, RTF, DOCX, ODT)"
-          >
-            <FileDown size={18} />
-          </button>
-          {content && <span className="content-badge">✓ Conteúdo gerado</span>}
-        </div>
+        {content && <span className="content-badge">✓ Conteúdo gerado</span>}
       </div>
       <div className="editor-body">
         <RichTextEditor

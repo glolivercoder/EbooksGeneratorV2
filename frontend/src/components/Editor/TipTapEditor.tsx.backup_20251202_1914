@@ -1,18 +1,16 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Heading from '@tiptap/extension-heading'
+import Bold from '@tiptap/extension-bold'
+import Italic from '@tiptap/extension-italic'
 import Underline from '@tiptap/extension-underline'
+import BulletList from '@tiptap/extension-bullet-list'
+import OrderedList from '@tiptap/extension-ordered-list'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import Color from '@tiptap/extension-color'
-import { TextStyle } from '@tiptap/extension-text-style'
-import Highlight from '@tiptap/extension-highlight'
-import CharacterCount from '@tiptap/extension-character-count'
-import FontFamily from '@tiptap/extension-font-family'
-import Mathematics from '@tiptap/extension-mathematics'
 import { useEffect, useState, useRef } from 'react'
 import SaveStatusIndicator from '../UI/SaveStatusIndicator'
 import './TipTapEditor.css'
-import './TipTapExtensions.css'
 
 interface TipTapEditorProps {
   content?: string
@@ -62,16 +60,6 @@ export default function TipTapEditor({
       Placeholder.configure({
         placeholder,
       }),
-      TextStyle,
-      Color,
-      Highlight.configure({
-        multicolor: true,
-      }),
-      FontFamily.configure({
-        types: ['textStyle'],
-      }),
-      CharacterCount,
-      Mathematics,
     ],
     content,
     editable,
@@ -210,59 +198,6 @@ export default function TipTapEditor({
         </div>
 
         <div className="menu-group">
-          <label className="menu-label" title="Cor do texto">
-            Cor:
-            <input
-              type="color"
-              onInput={(e) => editor.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
-              value={editor.getAttributes('textStyle').color || '#000000'}
-              className="color-picker"
-            />
-          </label>
-          <label className="menu-label" title="Cor de fundo">
-            Fundo:
-            <input
-              type="color"
-              onInput={(e) => editor.chain().focus().toggleHighlight({ color: (e.target as HTMLInputElement).value }).run()}
-              className="color-picker"
-            />
-          </label>
-        </div>
-
-        <div className="menu-group">
-          <select
-            onChange={(e) => editor.chain().focus().setFontFamily(e.target.value).run()}
-            value={editor.getAttributes('textStyle').fontFamily || ''}
-            className="font-select"
-            title="Família de fonte"
-          >
-            <option value="">Fonte padrão</option>
-            <option value="Inter">Inter</option>
-            <option value="Arial">Arial</option>
-            <option value="Courier New">Courier New</option>
-            <option value="Georgia">Georgia</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Verdana">Verdana</option>
-            <option value="Comic Sans MS">Comic Sans MS</option>
-          </select>
-        </div>
-
-        <div className="menu-group">
-          <button
-            onClick={() => {
-              const latex = prompt('Digite a fórmula LaTeX (ex: E = mc^2):')
-              if (latex) {
-                editor.chain().focus().insertContent(`<span class="math-inline">${latex}</span>`).run()
-              }
-            }}
-            className="menu-btn"
-            title="Inserir fórmula matemática"
-          >
-            ∑
-          </button>
-        </div>
-
-        <div className="menu-group">
           <button
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
@@ -293,10 +228,7 @@ export default function TipTapEditor({
             <strong>Palavras:</strong> {wordCount}
           </span>
           <span className="stat">
-            <strong>Caracteres:</strong> {editor.storage.characterCount?.characters() || characterCount}
-          </span>
-          <span className="stat">
-            <strong>Limite:</strong> {editor.storage.characterCount?.words() || 'Ilimitado'}
+            <strong>Caracteres:</strong> {characterCount}
           </span>
         </div>
         {editable && onAutoSave && (

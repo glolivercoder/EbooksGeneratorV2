@@ -194,13 +194,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
             {/* Prompt Optimizer sempre visível no topo */}
             <div className="wizard-section prompt-section">
                 <div className="prompt-header">
-                    <button
-                        className="btn btn-primary"
-                        onClick={handleReset}
-                        title="Criar um novo outline do zero"
-                    >
-                        ✨ Criar Novo Outline
-                    </button>
+                    <h3>Criar Novo Outline</h3>
                     <div className="header-actions">
                         <button
                             className="load-outline-btn"
