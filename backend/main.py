@@ -66,6 +66,151 @@ def save_history(history: List[Dict[str, Any]]):
     except Exception as e:
         logger.error(f"Erro ao salvar histórico: {e}")
 
+# ==================== Book Persistence (File System) ====================
+BOOKS_DIR = os.path.join(DATA_DIR, "books")
+
+if not os.path.exists(BOOKS_DIR):
+    os.makedirs(BOOKS_DIR)
+
+def save_book_file(book_data: Dict[str, Any]) -> str:
+    """Salva dados do livro em arquivo JSON"""
+    book_id = book_data.get("id")
+    if not book_id:
+        import uuid
+        book_id = str(uuid.uuid4())
+        book_data["id"] = book_id
+    
+    file_path = os.path.join(BOOKS_DIR, f"{book_id}.json")
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(book_data, f, ensure_ascii=False, indent=2)
+        return book_id
+    except Exception as e:
+        logger.error(f"Erro ao salvar livro {book_id}: {e}")
+        raise e
+
+def load_book_file(book_id: str) -> Optional[Dict[str, Any]]:
+    """Carrega dados do livro do arquivo JSON"""
+    file_path = os.path.join(BOOKS_DIR, f"{book_id}.json")
+    if not os.path.exists(file_path):
+        return None
+    
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Erro ao carregar livro {book_id}: {e}")
+        return None
+
+def list_book_files() -> List[Dict[str, Any]]:
+    """Lista todos os livros salvos (resumo)"""
+    books = []
+    if not os.path.exists(BOOKS_DIR):
+        return []
+        
+    for filename in os.listdir(BOOKS_DIR):
+        if filename.endswith(".json"):
+            try:
+                file_path = os.path.join(BOOKS_DIR, filename)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    # Retornar apenas metadados essenciais para a lista
+                    books.append({
+                        "id": data.get("id"),
+                        "title": data.get("title"),
+                        "description": data.get("description"),
+                        "created_at": data.get("created_at"),
+                        "last_modified": data.get("last_modified"),
+                        "last_saved": data.get("last_saved"),
+                        "status": data.get("status"),
+                        "total_chapters": data.get("total_chapters", 0)
+                    })
+            except Exception as e:
+                logger.error(f"Erro ao ler arquivo {filename}: {e}")
+                continue
+    
+    # Ordenar por data de modificação (mais recente primeiro)
+    books.sort(key=lambda x: x.get("last_modified", ""), reverse=True)
+    return books
+
+def delete_book_file(book_id: str) -> bool:
+    """Remove arquivo do livro"""
+    file_path = os.path.join(BOOKS_DIR, f"{book_id}.json")
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao deletar livro {book_id}: {e}")
+            return False
+    return False
+
+# ==================== Library Endpoints ====================
+
+@app.get("/api/library/books")
+async def list_library_books():
+    """Lista todos os livros salvos na biblioteca"""
+    try:
+        books = list_book_files()
+        return {
+            "status": "success",
+            "count": len(books),
+            "books": books
+        }
+    except Exception as e:
+        logger.error(f"Erro ao listar livros: {e}")
+        return {"status": "error", "error": str(e)}
+
+@app.post("/api/library/books")
+async def save_book_to_library(book_data: Dict[str, Any]):
+    """Salva um livro na biblioteca"""
+    try:
+        book_id = save_book_file(book_data)
+        return {
+            "status": "success",
+            "book_id": book_id,
+            "message": "Livro salvo com sucesso"
+        }
+    except Exception as e:
+        logger.error(f"Erro ao salvar livro: {e}")
+        return {"status": "error", "error": str(e)}
+
+@app.get("/api/library/books/{book_id}")
+async def get_library_book(book_id: str):
+    """Carrega um livro completo da biblioteca"""
+    try:
+        book = load_book_file(book_id)
+        if not book:
+            raise HTTPException(status_code=404, detail="Livro não encontrado")
+        
+        return {
+            "status": "success",
+            "book": book
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Erro ao carregar livro: {e}")
+        return {"status": "error", "error": str(e)}
+
+@app.delete("/api/library/books/{book_id}")
+async def delete_library_book(book_id: str):
+    """Remove um livro da biblioteca"""
+    try:
+        success = delete_book_file(book_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Livro não encontrado ou erro ao deletar")
+            
+        return {
+            "status": "success",
+            "message": "Livro removido com sucesso"
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Erro ao deletar livro: {e}")
+        return {"status": "error", "error": str(e)}
+
 # ==================== Models ====================
 
 class EbookConfig(BaseModel):

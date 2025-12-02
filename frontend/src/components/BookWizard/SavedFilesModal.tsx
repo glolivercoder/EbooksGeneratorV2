@@ -20,44 +20,17 @@ interface SavedFilesModalProps {
 }
 
 export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesModalProps) {
-    const { currentBook } = useBookStore()
-    const [savedFiles, setSavedFiles] = useState<SavedFile[]>([])
+    const { currentBook, savedBooks, deleteFromLibrary } = useBookStore()
+    const [files, setFiles] = useState<SavedFile[]>([])
 
     // Carregar arquivos salvos quando modal abre
     useEffect(() => {
         if (isOpen) {
-            loadSavedFiles()
+            setFiles(savedBooks || [])
         }
-    }, [isOpen])
+    }, [isOpen, savedBooks])
 
-    const loadSavedFiles = () => {
-        try {
-            const storeData = localStorage.getItem('book-store')
-            console.log('SavedFilesModal - localStorage raw:', storeData)
-
-            if (storeData) {
-                const parsed = JSON.parse(storeData)
-                console.log('SavedFilesModal - parsed:', parsed)
-
-                const files: SavedFile[] = []
-
-                // Verificar currentBook no state
-                if (parsed.state?.currentBook) {
-                    files.push(parsed.state.currentBook)
-                    console.log('✓ Encontrado currentBook:', parsed.state.currentBook.title)
-                }
-
-                setSavedFiles(files)
-                console.log('SavedFilesModal - Total de arquivos:', files.length)
-            } else {
-                console.log('SavedFilesModal - Nenhum dado no localStorage')
-                setSavedFiles([])
-            }
-        } catch (error) {
-            console.error('SavedFilesModal - Erro ao carregar:', error)
-            setSavedFiles([])
-        }
-    }
+    // Função loadSavedFiles removida pois agora usamos o store direto
 
     const handleLoad = (file: SavedFile) => {
         console.log('SavedFilesModal - Carregando arquivo:', file.title)
@@ -67,8 +40,7 @@ export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesM
 
     const handleDelete = (fileId: string) => {
         if (window.confirm('Deseja realmente deletar este arquivo?')) {
-            localStorage.removeItem('book-store')
-            setSavedFiles([])
+            deleteFromLibrary(fileId)
             console.log('✓ Arquivo deletado')
         }
     }
@@ -105,7 +77,7 @@ export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesM
                 </div>
 
                 <div className="modal-body">
-                    {savedFiles.length === 0 ? (
+                    {files.length === 0 ? (
                         <div className="empty-state">
                             <BookOpen size={48} />
                             <p>Nenhum arquivo salvo encontrado</p>
@@ -113,7 +85,7 @@ export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesM
                         </div>
                     ) : (
                         <div className="files-list">
-                            {savedFiles.map(file => (
+                            {files.map(file => (
                                 <div
                                     key={file.id}
                                     className={`file-item ${currentBook?.id === file.id ? 'active' : ''}`}

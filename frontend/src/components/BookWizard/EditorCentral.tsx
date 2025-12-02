@@ -72,13 +72,11 @@ function convertMarkdownToHTML(md: string): string {
 export default function EditorCentral({ content = '', onContentChange }: EditorCentralProps) {
   const { markSaved, setIsSaving, currentBook, setCurrentBook } = useBookStore()
 
-  const placeholderContent = `<h1>Bem-vindo ao Editor</h1><p>Use este espaço para visualizar e editar o conteúdo gerado.</p><ul><li>Negrito e itálico</li><li>Listas</li><li>Blocos de código</li></ul>`
-
   // Handler para auto-save
   const handleAutoSave = (html: string) => {
-    // Ignorar se for o placeholder
-    if (html === placeholderContent || html.includes('Bem-vindo ao Editor')) {
-      console.log('EditorCentral - Ignorando auto-save do placeholder')
+    // Ignorar se estiver vazio
+    if (!html || html === '<p></p>' || html === '<p><br></p>') {
+      console.log('EditorCentral - Ignorando auto-save de conteúdo vazio')
       return
     }
 
@@ -111,14 +109,27 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
   const isMarkdown = content && (content.includes('##') || content.includes('**'))
   const htmlContent = isMarkdown ? convertMarkdownToHTML(content) : content
 
-
-  const effectiveContent = htmlContent || placeholderContent
-
   console.log('EditorCentral - RENDER')
   console.log('  content (raw):', content ? `${content.length} chars` : 'vazio')
   console.log('  isMarkdown:', isMarkdown)
   console.log('  htmlContent:', htmlContent ? `${htmlContent.length} chars` : 'vazio')
-  console.log('  effectiveContent:', effectiveContent.substring(0, 100))
+
+  // Se não há conteúdo, mostrar mensagem vazia
+  if (!htmlContent) {
+    return (
+      <div className="editor-central">
+        <div className="editor-header">
+          <h2>Editor de Conteúdo</h2>
+        </div>
+        <div className="editor-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Nenhum conteúdo gerado ainda</p>
+            <p style={{ fontSize: '0.9rem' }}>Selecione um capítulo na sidebar e gere conteúdo para visualizá-lo aqui</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="editor-central">
@@ -128,15 +139,14 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
       </div>
       <div className="editor-body">
         <RichTextEditor
-          content={effectiveContent}
+          content={htmlContent}
           editable={true}
           onChange={(html: string) => {
-            // Ignorar se for o placeholder ou vazio
+            // Ignorar se estiver vazio
             const isEmpty = html === '<p></p>' || html === '' || html === '<p><br></p>'
-            const isPlaceholder = html === placeholderContent || html.includes('Bem-vindo ao Editor')
 
-            if (isPlaceholder || isEmpty) {
-              console.log('EditorCentral - Ignorando onChange (placeholder ou vazio):', html.substring(0, 50))
+            if (isEmpty) {
+              console.log('EditorCentral - Ignorando onChange (vazio):', html.substring(0, 50))
               return
             }
 

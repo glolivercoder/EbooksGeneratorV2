@@ -174,14 +174,28 @@ export default function ChapterScopeEnhanced({
       const generatedContent = data.content
 
       // Atualizar tópico com conteúdo gerado
-      setTopics(prev => prev.map(t =>
+      const updatedTopics = topics.map(t =>
         t.id === topicId ? {
           ...t,
-          status: 'completed',
+          status: 'completed' as const,
           content: generatedContent,
           wordCount: data.word_count || 0
         } : t
-      ))
+      )
+
+      setTopics(updatedTopics)
+
+      // Reconstruir conteúdo completo e enviar para o editor
+      const fullContent = updatedTopics
+        .filter(t => t.status === 'completed' && t.content)
+        .map(t => `## ${t.title}\n\n${t.content}`)
+        .join('\n\n')
+
+      if (fullContent) {
+        console.log(`ChapterScopeEnhanced - Atualizando editor após tópico único: ${topic.title}`)
+        onContentGenerated?.(fullContent)
+        // onSendToEditor removido - usando EditorCentral embarcado
+      }
 
       toast.success(`${topic.title} gerado com sucesso!`)
       return generatedContent
@@ -230,7 +244,7 @@ export default function ChapterScopeEnhanced({
             if (currentFullContent) {
               console.log(`ChapterScopeEnhanced - Atualizando editor após tópico: ${topic.title}`)
               onContentGenerated?.(currentFullContent)
-              onSendToEditor?.(currentFullContent)
+              // onSendToEditor removido - usando EditorCentral embarcado
             }
           }
           // Pequena pausa entre tópicos
@@ -260,20 +274,15 @@ export default function ChapterScopeEnhanced({
       // Auto-save: marcar como salvando e depois salvo
       setIsSaving(true)
 
-      // Enviar automaticamente para o editor
-      if (onSendToEditor && fullContent) {
-        console.log('ChapterScopeEnhanced - chamando onSendToEditor')
-        onSendToEditor(fullContent)
+      // Enviar automaticamente para o editor - DESABILITADO
+      // Usando EditorCentral embarcado ao invés de modal
+      if (fullContent) {
+        console.log('ChapterScopeEnhanced - conteúdo gerado, enviando para EditorCentral via onContentGenerated')
 
-        // Marcar como salvo após enviar
+        // Marcar como salvo
         setTimeout(() => {
           markSaved()
-          toast.success('Capítulo gerado, enviado e salvo automaticamente!')
-        }, 500)
-      } else {
-        setTimeout(() => {
-          markSaved()
-          toast.success('Capítulo gerado e salvo com sucesso!')
+          toast.success('Capítulo gerado e salvo automaticamente!')
         }, 500)
       }
     } finally {
@@ -282,9 +291,9 @@ export default function ChapterScopeEnhanced({
   }
 
   const sendToEditor = () => {
+    // sendToEditor DESABILITADO - usando EditorCentral embarcado
     if (chapterContent) {
-      onSendToEditor?.(chapterContent)
-      toast.success('Conteúdo enviado para o editor!')
+      toast.info('Conteúdo já está no editor abaixo!')
     }
   }
 

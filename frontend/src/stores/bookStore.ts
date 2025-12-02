@@ -31,32 +31,12 @@ interface BookStore {
   isSaving: boolean
   autoSaveEnabled: boolean
 
-  // Ações
-  setCurrentBook: (book: BookData) => void
-  updateBookTitle: (title: string) => void
-  updateBookDescription: (description: string) => void
-  updateChapter: (chapterNumber: number, updates: Partial<Chapter>) => void
-  updateChapterContent: (chapterNumber: number, content: string) => void
-  addChapter: (chapter: Chapter) => void
-  removeChapter: (chapterNumber: number) => void
-  reorderChapters: (fromIndex: number, toIndex: number) => void
-  markDirty: () => void
-  markClean: () => void
-  clearCurrentBook: () => void
-  setBookStatus: (status: BookData['status']) => void
-
-  // Auto-save
-  updateOutline: (outline: Partial<BookData>) => void
-  enableAutoSave: () => void
-  disableAutoSave: () => void
-  setIsSaving: (saving: boolean) => void
-  markSaved: () => void
-
-  // Utilitários
-  getChapter: (chapterNumber: number) => Chapter | undefined
-  getTotalPages: () => number
-  getSaveStatus: () => 'saved' | 'saving' | 'unsaved' | 'no-book'
-  exportBook: () => BookData
+  // Biblioteca de livros salvos
+  savedBooks: BookData[]
+  fetchLibrary: () => Promise<void>
+  saveToLibrary: () => Promise<void>
+  deleteFromLibrary: (id: string) => Promise<void>
+  loadFromLibrary: (id: string) => Promise<void>
 }
 
 export const useBookStore = create<BookStore>()(
@@ -64,6 +44,7 @@ export const useBookStore = create<BookStore>()(
     (set, get) => ({
       // Estado inicial
       currentBook: null,
+      savedBooks: [], // Inicializar vazio
       isDirty: false,
       isSaving: false,
       autoSaveEnabled: true,
@@ -280,6 +261,108 @@ export const useBookStore = create<BookStore>()(
             isDirty: false,
             isSaving: false
           })
+          // Também salvar na biblioteca automaticamente
+          get().saveToLibrary()
+        }
+      },
+
+      // Library Actions (Backend Persistence)
+      fetchLibrary: async () => {
+        try {
+          const response = await fetch('http://localhost:8000/api/library/books')
+          const data = await response.json()
+          if (data.status === 'success') {
+            set({ savedBooks: data.books })
+          }
+        } catch (error) {
+          console.error('Erro ao buscar biblioteca:', error)
+        }
+      },
+
+      saveToLibrary: async () => {
+        const { currentBook } = get()
+        if (!currentBook) return
+
+        // Formatar título: Prompt - Data Hora
+        const date = new Date()
+        const formattedDate = date.toLocaleString('pt-BR', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        }).replace(',', '')
+
+        // Usar optimized_prompt ou title como base
+        const baseTitle = currentBook.optimized_prompt
+          ? (currentBook.optimized_prompt.length > 30 ? currentBook.optimized_prompt.substring(0, 30) + '...' : currentBook.optimized_prompt)
+          : currentBook.title
+
+        const newTitle = `${baseTitle} - ${formattedDate}`
+
+        const bookToSave = {
+          ...currentBook,
+          title: newTitle,
+          last_saved: new Date().toISOString()
+        }
+
+        try {
+          set({ isSaving: true })
+          const response = await fetch('http://localhost:8000/api/library/books', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookToSave)
+          })
+
+          const data = await response.json()
+
+          if (data.status === 'success') {
+            // Atualizar lista local após salvar
+            await get().fetchLibrary()
+
+            set({
+              currentBook: bookToSave,
+              isDirty: false,
+              isSaving: false
+            })
+            console.log('Livro salvo no backend:', data.book_id)
+          } else {
+            console.error('Erro ao salvar no backend:', data.error)
+            set({ isSaving: false })
+          }
+        } catch (error) {
+          console.error('Erro de conexão ao salvar:', error)
+          set({ isSaving: false })
+        }
+      },
+
+      deleteFromLibrary: async (id) => {
+        try {
+          const response = await fetch(`http://localhost:8000/api/library/books/${id}`, {
+            method: 'DELETE'
+          })
+          const data = await response.json()
+
+          if (data.status === 'success') {
+            // Atualizar lista local
+            await get().fetchLibrary()
+          }
+        } catch (error) {
+          console.error('Erro ao deletar do backend:', error)
+        }
+      },
+
+      loadFromLibrary: async (id) => {
+        try {
+          const response = await fetch(`http://localhost:8000/api/library/books/${id}`)
+          const data = await response.json()
+
+          if (data.status === 'success' && data.book) {
+            set({
+              currentBook: data.book,
+              isDirty: false
+            })
+            console.log('Livro carregado do backend:', data.book.title)
+          }
+        } catch (error) {
+          console.error('Erro ao carregar do backend:', error)
         }
       },
 
@@ -316,6 +399,7 @@ export const useBookStore = create<BookStore>()(
       name: 'book-store',
       partialize: (state) => ({
         currentBook: state.currentBook,
+        savedBooks: state.savedBooks, // Persistir a biblioteca
         isDirty: state.isDirty,
         autoSaveEnabled: state.autoSaveEnabled
       })

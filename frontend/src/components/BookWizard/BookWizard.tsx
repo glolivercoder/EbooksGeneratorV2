@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import PromptOptimizer from './PromptOptimizer'
 import OutlineEditor from './OutlineEditor'
 import GenerationProgress from './GenerationProgress'
-import BookEditor from './BookEditor'
 import EditorCentral from './EditorCentral'
 import LoadOutlineModal from './LoadOutlineModal'
 import SavedFilesModal from './SavedFilesModal'
@@ -24,6 +23,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
     const [skipResearch, setSkipResearch] = useState(false)
     const [writingTone, setWritingTone] = useState('didatico')
     const [editorContent, setEditorContent] = useState('')
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
     const { setCurrentBook, currentBook, isDirty } = useBookStore()
 
@@ -95,15 +95,22 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
     }
 
     const handleReset = () => {
-        setStep(1)
-        setOutline(null)
-        setBookId(null)
-        // Limpar store se confirmado
         if (isDirty) {
             const confirmed = window.confirm('Você tem alterações não salvas. Deseja descartá-las?')
             if (!confirmed) return
         }
-        // TODO: Limpar store
+
+        // Limpar estado local
+        setStep(1)
+        setOutline(null)
+        setBookId(null)
+        setEditorContent('')
+
+        // Limpar store
+        const { clearCurrentBook } = useBookStore.getState()
+        clearCurrentBook()
+
+        console.log('Wizard resetado e store limpo')
     }
 
     const handleOutlineComplete = async (finalOutline: any) => {
@@ -138,7 +145,8 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
     }
 
     const handleGenerationComplete = (_bookData: any) => {
-        setStep(4)
+        // Permanecer em step 2 para usar o EditorCentral
+        setStep(2)
     }
 
     const handleUpdateChapter = (chapterUpdates: any) => {
@@ -213,30 +221,11 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                 />
             </div>
 
-            {/* Layout de três colunas: sidebar esquerdo, centro (editor), sidebar direito */}
-            <div className="wizard-three-columns">
-                {/* Sidebar esquerdo: escopo do livro */}
-                <div className="wizard-sidebar-left">
-                    <div className="sidebar-section">
-                        <h3>Escopo do Livro</h3>
-                        {outline ? (
-                            <div className="book-scope">
-                                <h4>{outline.book_title}</h4>
-                                <p>{outline.description}</p>
-                                <div className="book-meta">
-                                    <span>Total de capítulos: {outline.total_chapters}</span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="placeholder-text">
-                                Gere um outline para ver o escopo do livro aqui.
-                            </div>
-                        )}
-                    </div>
-                </div>
+            {/* Layout Flexível: Conteúdo Principal + Sidebar Direita (Colapsável) */}
+            <div className={`wizard-flexible-layout ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
 
                 {/* Centro: OutlineEditor OU Editor */}
-                <div className="wizard-main-center">
+                <div className="wizard-main-center expanded-editor">
                     {step === 2 && outline && (
                         <OutlineEditor
                             initialOutline={outline}
@@ -252,12 +241,8 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                         />
                     )}
 
-                    {step === 4 && bookId && (
-                        <BookEditor bookId={bookId} />
-                    )}
-
                     {/* Editor Central sempre visível em step 1 ou quando há outline */}
-                    {(step === 1 || outline) && step !== 3 && step !== 4 && (
+                    {(step === 1 || outline) && step !== 3 && (
                         <EditorCentral
                             bookId={bookId}
                             outline={outline}
@@ -267,60 +252,55 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                     )}
                 </div>
 
-                {/* Sidebar direito: escopo dos capítulos (visível após outline) */}
+                {/* Sidebar Direita: Escopo dos Capítulos */}
                 {outline && (
-                    <div className="wizard-sidebar-right">
-                        <div className="sidebar-section">
-                            <h3>Escopo dos Capítulos</h3>
+                    <div className="wizard-sidebar-right collapsible-sidebar">
+                        <button
+                            className="sidebar-toggle-btn"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            title={isSidebarOpen ? "Fechar sidebar" : "Expandir sidebar"}
+                        >
+                            {isSidebarOpen ? '>' : '<'}
+                        </button>
 
-                            {/* Lista de capítulos para seleção */}
-                            <div className="chapters-selector">
-                                {outline.chapters.map((chapter: any) => (
-                                    <button
-                                        key={chapter.number}
-                                        className={`chapter-selector-btn ${selectedChapter?.number === chapter.number ? 'active' : ''
-                                            }`}
-                                        onClick={() => handleChapterSelect(chapter)}
-                                    >
-                                        Cap. {chapter.number}
-                                    </button>
-                                ))}
+                        <div className={`sidebar-content ${!isSidebarOpen ? 'hidden' : ''}`}>
+                            <div className="sidebar-section">
+                                <h3>Escopo dos Capítulos</h3>
+
+                                {/* Lista de capítulos para seleção */}
+                                <div className="chapters-selector">
+                                    {outline.chapters.map((chapter: any) => (
+                                        <button
+                                            key={chapter.number}
+                                            className={`chapter-selector-btn ${selectedChapter?.number === chapter.number ? 'active' : ''
+                                                }`}
+                                            onClick={() => handleChapterSelect(chapter)}
+                                        >
+                                            Cap. {chapter.number}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Detalhes do capítulo selecionado */}
+                                {selectedChapter && (
+                                    <ChapterScopeEnhanced
+                                        chapterNumber={selectedChapter.number}
+                                        chapterTitle={selectedChapter.title}
+                                        bookTopic={outline.book_title || 'Meu Livro'}
+                                        writingTone={writingTone}
+                                        onContentGenerated={(content) => {
+                                            console.log('========== AI CONTENT GENERATED ===========')
+                                            handleUpdateChapter({ content })
+                                            setEditorContent(content)
+                                        }}
+                                        onSendToEditor={(content) => {
+                                            console.log('========== SEND TO EDITOR ===========')
+                                            setEditorContent(content)
+                                            onSendToEditor?.(content)
+                                        }}
+                                    />
+                                )}
                             </div>
-
-                            {/* Detalhes do capítulo selecionado */}
-                            {selectedChapter && (
-                                <ChapterScopeEnhanced
-                                    chapterNumber={selectedChapter.number}
-                                    chapterTitle={selectedChapter.title}
-                                    bookTopic={outline.book_title || 'Meu Livro'}
-                                    writingTone={writingTone}
-                                    onContentGenerated={(content) => {
-                                        console.log('========== AI CONTENT GENERATED ===========')
-                                        console.log('BookWizard - onContentGenerated')
-                                        console.log('  Content length:', content.length)
-                                        console.log('  First 200 chars:', content.substring(0, 200))
-                                        console.log('  Selected chapter:', selectedChapter?.number, selectedChapter?.title)
-
-                                        handleUpdateChapter({ content })
-                                        setEditorContent(content)
-
-                                        console.log('  editorContent atualizado!')
-                                        console.log('===========================================')
-                                    }}
-                                    onSendToEditor={(content) => {
-                                        console.log('========== SEND TO EDITOR ===========')
-                                        console.log('BookWizard - onSendToEditor')
-                                        console.log('  Content length:', content.length)
-                                        console.log('  First 100 chars:', content.substring(0, 100))
-
-                                        setEditorContent(content)
-                                        onSendToEditor?.(content)
-
-                                        console.log('  editorContent setado:', content ? 'SIM' : 'NÃO')
-                                        console.log('=====================================')
-                                    }}
-                                />
-                            )}
                         </div>
                     </div>
                 )}
