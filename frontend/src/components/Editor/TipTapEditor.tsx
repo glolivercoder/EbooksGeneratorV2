@@ -20,10 +20,15 @@ import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
 
+import { FolderOpen, Save, FileDown } from 'lucide-react'
+
 interface TipTapEditorProps {
   content?: string
   onContentChange?: (content: string) => void
   onAutoSave?: (content: string) => void
+  onSave?: () => void
+  onOpen?: () => void
+  onExport?: () => void
   placeholder?: string
   editable?: boolean
   autoSaveDelay?: number
@@ -33,6 +38,9 @@ export default function TipTapEditor({
   content = '',
   onContentChange,
   onAutoSave,
+  onSave,
+  onOpen,
+  onExport,
   placeholder = 'Comece a escrever seu livro...',
   editable = true,
   autoSaveDelay = 2000

@@ -37,6 +37,29 @@ interface BookStore {
   saveToLibrary: () => Promise<void>
   deleteFromLibrary: (id: string) => Promise<void>
   loadFromLibrary: (id: string) => Promise<void>
+
+  // Actions
+  setCurrentBook: (book: BookData) => void
+  updateBookTitle: (title: string) => void
+  updateBookDescription: (description: string) => void
+  updateChapter: (chapterNumber: number, updates: Partial<Chapter>) => void
+  updateChapterContent: (chapterNumber: number, content: string) => void
+  addChapter: (chapter: Chapter) => void
+  removeChapter: (chapterNumber: number) => void
+  reorderChapters: (fromIndex: number, toIndex: number) => void
+  markDirty: () => void
+  markClean: () => void
+  clearCurrentBook: () => void
+  setBookStatus: (status: BookData['status']) => void
+  updateOutline: (outline: Partial<BookData>) => void
+  enableAutoSave: () => void
+  disableAutoSave: () => void
+  setIsSaving: (saving: boolean) => void
+  markSaved: () => void
+  getChapter: (chapterNumber: number) => Chapter | undefined
+  getTotalPages: () => number
+  getSaveStatus: () => 'no-book' | 'saving' | 'unsaved' | 'saved'
+  exportBook: () => BookData
 }
 
 export const useBookStore = create<BookStore>()(

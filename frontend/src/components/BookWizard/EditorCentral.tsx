@@ -1,6 +1,6 @@
 import { useBookStore } from '../../stores/bookStore'
 import { FolderOpen, Save, FileDown } from 'lucide-react'
-import RichTextEditor from '../RichTextEditor/RichTextEditor'
+import TipTapEditor from '../Editor/TipTapEditor'
 import '../RichTextEditor/RichTextEditor.css'
 import '../BookWizard/BookWizard.css'
 import './EditorCentralToolbar.css'
@@ -206,36 +206,12 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
     <div className="editor-central">
       <div className="editor-header">
         <h2>Editor de Conteúdo</h2>
-        <div className="editor-toolbar">
-          <button
-            className="toolbar-btn"
-            onClick={handleOpenFiles}
-            title="Abrir arquivos salvos"
-          >
-            <FolderOpen size={18} />
-          </button>
-          <button
-            className="toolbar-btn"
-            onClick={handleSaveToDisk}
-            title="Salvar no dispositivo"
-          >
-            <Save size={18} />
-          </button>
-          <button
-            className="toolbar-btn"
-            onClick={handleExportPDF}
-            title="Exportar (PDF, RTF, DOCX, ODT)"
-          >
-            <FileDown size={18} />
-          </button>
-          {content && <span className="content-badge">✓ Conteúdo gerado</span>}
-        </div>
       </div>
       <div className="editor-body">
-        <RichTextEditor
+        <TipTapEditor
           content={htmlContent}
           editable={true}
-          onChange={(html: string) => {
+          onContentChange={(html: string) => {
             // Ignorar se estiver vazio
             const isEmpty = html === '<p></p>' || html === '' || html === '<p><br></p>'
 
@@ -248,6 +224,9 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
             onContentChange?.(html)
           }}
           onAutoSave={handleAutoSave}
+          onOpen={handleOpenFiles}
+          onSave={handleSaveToDisk}
+          onExport={handleExportPDF}
         />
       </div>
     </div>
