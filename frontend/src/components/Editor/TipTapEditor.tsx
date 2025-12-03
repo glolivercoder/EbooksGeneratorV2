@@ -9,8 +9,13 @@ import Highlight from '@tiptap/extension-highlight'
 import CharacterCount from '@tiptap/extension-character-count'
 import FontFamily from '@tiptap/extension-font-family'
 import Mathematics from '@tiptap/extension-mathematics'
+import Image from '@tiptap/extension-image'
+import { BubbleMenu } from '@tiptap/react'
+import ResizeImage from 'tiptap-extension-resize-image'
+import Columns from '@tiptap-extend/columns'
 import { useEffect, useState, useRef } from 'react'
 import SaveStatusIndicator from '../UI/SaveStatusIndicator'
+import PixabayModal from './PixabayModal'
 import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
@@ -34,6 +39,7 @@ export default function TipTapEditor({
 }: TipTapEditorProps) {
   const [wordCount, setWordCount] = useState(0)
   const [characterCount, setCharacterCount] = useState(0)
+  const [isPixabayModalOpen, setIsPixabayModalOpen] = useState(false)
   const autoSaveTimerRef = useRef<number | null>(null)
   const lastSavedContentRef = useRef<string>(content)
 
@@ -73,6 +79,9 @@ export default function TipTapEditor({
       }),
       CharacterCount,
       Mathematics,
+      Image,
+      ResizeImage,
+      Columns,
     ],
     content,
     editable,
@@ -273,6 +282,38 @@ export default function TipTapEditor({
           >
             📊
           </button>
+
+          <button
+            onClick={() => setIsPixabayModalOpen(true)}
+            className="menu-btn"
+            title="Inserir imagem do Pixabay"
+          >
+            🖼️
+          </button>
+        </div>
+
+        <div className="menu-group">
+          <button
+            onClick={() => editor.chain().focus().setColumns(2).run()}
+            className="menu-btn"
+            title="2 Colunas"
+          >
+            ❚❚
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setColumns(3).run()}
+            className="menu-btn"
+            title="3 Colunas"
+          >
+            ❚❚❚
+          </button>
+          <button
+            onClick={() => editor.chain().focus().unsetColumns().run()}
+            className="menu-btn"
+            title="Remover Colunas"
+          >
+            ⬛
+          </button>
         </div>
 
         <div className="menu-group">
@@ -319,6 +360,14 @@ export default function TipTapEditor({
         )}
       </div>
       <EditorContent editor={editor} className="editor-content" />
+
+      <PixabayModal
+        isOpen={isPixabayModalOpen}
+        onClose={() => setIsPixabayModalOpen(false)}
+        onSelectImage={(url, alt) => {
+          editor?.chain().focus().setImage({ src: url, alt }).run()
+        }}
+      />
     </div>
   )
 }

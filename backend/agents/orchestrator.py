@@ -183,9 +183,36 @@ class BookOrchestratorAgent:
         # Buscar contexto relevante via similarity search
         query = f"Contexto relevante para capítulo: {state['chapter_title']}"
         docs = rag.retrieve(query, k=5)
-        state["rag_context"] = "\n\n".join([doc.page_content for doc in docs])
+        
+        # Carregar referências globais
+        global_refs = self._load_global_references()
+        
+        context_parts = [doc.page_content for doc in docs]
+        if global_refs:
+            context_parts.append(f"\n=== REFERÊNCIAS PERMANENTES (CRIPTO/BLOCKCHAIN) ===\n{global_refs}")
+            
+        state["rag_context"] = "\n\n".join(context_parts)
         
         return state
+    
+    def _load_global_references(self) -> str:
+        """Carrega referências globais do arquivo JSON"""
+        try:
+            ref_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "references", "crypto_references.json")
+            if not os.path.exists(ref_path):
+                return ""
+                
+            with open(ref_path, "r", encoding="utf-8") as f:
+                refs = json.load(f)
+                
+            formatted_refs = []
+            for ref in refs:
+                formatted_refs.append(f"- [{ref['category']}] {ref['site']}: {ref['description']} ({ref['link']})")
+                
+            return "\n".join(formatted_refs)
+        except Exception as e:
+            print(f"Erro ao carregar referências globais: {e}")
+            return ""
     
     async def _analyze_mental_graph(self, state: OrchestratorState) -> OrchestratorState:
         """Analisa fluxo narrativo do mental graph"""

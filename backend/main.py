@@ -10,6 +10,7 @@ from typing import List, Optional, Dict, Any
 import uvicorn
 import json
 import os
+import httpx
 import traceback
 import logging
 from datetime import datetime
@@ -602,6 +603,42 @@ async def search_pixabay_images(query: str, per_page: int = 10):
     Busca imagens no Pixabay
     """
     # TODO: Implementar busca no Pixabay
+    if not settings.pixabay_api_key:
+        raise HTTPException(status_code=400, detail="Pixabay API Key não configurada")
+        
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://pixabay.com/api/",
+                params={
+                    "key": settings.pixabay_api_key,
+                    "q": query,
+                    "image_type": "photo",
+                    "per_page": per_page,
+                    "safesearch": "true"
+                }
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail="Erro ao contatar Pixabay")
+                
+            data = response.json()
+            
+            images = []
+            for hit in data.get("hits", []):
+                images.append({
+                    "id": hit["id"],
+                    "previewURL": hit["previewURL"],
+                    "largeImageURL": hit["largeImageURL"],
+                    "tags": hit["tags"],
+                    "user": hit["user"]
+                })
+                
+            return {"images": images}
+            
+    except Exception as e:
+        logger.error(f"Erro na busca Pixabay: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
     return {
         "query": query,
         "results": [],
