@@ -186,26 +186,43 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
   console.log('  htmlContent:', htmlContent ? `${htmlContent.length} chars` : 'vazio')
 
   // Se não há conteúdo, mostrar mensagem vazia
-  if (!htmlContent) {
-    return (
-      <div className="editor-central">
-        <div className="editor-header">
-          <h2>Editor de Conteúdo</h2>
-        </div>
-        <div className="editor-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-          <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Nenhum conteúdo gerado ainda</p>
-            <p style={{ fontSize: '0.9rem' }}>Selecione um capítulo na sidebar e gere conteúdo para visualizá-lo aqui</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // if (!htmlContent) {
+  //   return (
+  //     <div className="editor-central">
+  //       <div className="editor-header">
+  //         <h2>Editor de Conteúdo</h2>
+  //       </div>
+  //       <div className="editor-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+  //         <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+  //           <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Nenhum conteúdo gerado ainda</p>
+  //           <p style={{ fontSize: '0.9rem' }}>Selecione um capítulo na sidebar e gere conteúdo para visualizá-lo aqui</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="editor-central">
-      <div className="editor-header">
-        <h2>Editor de Conteúdo</h2>
+      {/* Header minimalista integrado */}
+      <div className="editor-header-compact" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '8px 12px',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-secondary)',
+        fontSize: '0.9rem',
+        color: 'var(--text-secondary)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>Editor de Conteúdo</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span>{currentBook?.title || 'Sem título'}</span>
+        </div>
+        <div style={{ fontSize: '0.8rem' }}>
+          {content ? `${content.length} caracteres` : 'Vazio'}
+        </div>
       </div>
       <div className="editor-body">
         <TipTapEditor

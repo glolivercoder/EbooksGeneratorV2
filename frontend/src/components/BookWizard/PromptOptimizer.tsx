@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle, AlertCircle, RotateCcw, Sparkles, Loader, ToggleLeft, ToggleRight } from 'lucide-react'
+import { CheckCircle, AlertCircle, RotateCcw, Sparkles, Loader, ToggleLeft, ToggleRight, ChevronUp, ChevronDown } from 'lucide-react'
 import { useProject } from '../../stores/projectStore'
 import WritingToneSelector from './WritingToneSelector'
 import toast from 'react-hot-toast'
@@ -10,13 +10,15 @@ interface PromptOptimizerProps {
   initialPrompt?: string
   isLocked?: boolean
   onReset?: () => void
+  initialIsOpen?: boolean
 }
 
-export default function PromptOptimizer({ 
-  onComplete, 
-  initialPrompt = 'Aprendendo usando a Tecnologia do Notebook LM - Crie um ebook conciso com 3 capítulos, cada um com aproximadamente 2 páginas. Foque em introdução prática, recursos principais e exemplos de uso do Notebook LM.', 
-  isLocked = false, 
-  onReset 
+export default function PromptOptimizer({
+  onComplete,
+  initialPrompt = 'Aprendendo usando a Tecnologia do Notebook LM - Crie um ebook conciso com 3 capítulos, cada um com aproximadamente 2 páginas. Foque em introdução prática, recursos principais e exemplos de uso do Notebook LM.',
+  isLocked = false,
+  onReset,
+  initialIsOpen = true
 }: PromptOptimizerProps) {
   const [prompt, setPrompt] = useState(initialPrompt)
   const [isOptimizing, setIsOptimizing] = useState(false)
@@ -24,7 +26,12 @@ export default function PromptOptimizer({
   const [isGeneratingOutline, setIsGeneratingOutline] = useState(false)
   const [isOptimizerEnabled, setIsOptimizerEnabled] = useState(true)
   const [writingTone, setWritingTone] = useState('didatico')
+  const [isOpen, setIsOpen] = useState(initialIsOpen)
   const { addPrompt, addOutline } = useProject()
+
+  useEffect(() => {
+    setIsOpen(initialIsOpen)
+  }, [initialIsOpen])
 
   useEffect(() => {
     if (initialPrompt) setPrompt(initialPrompt)
@@ -43,12 +50,12 @@ export default function PromptOptimizer({
         const response = await fetch('http://localhost:8000/api/book/generate-outline', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             prompt: prompt,
             target_audience: 'profissionais'
           })
         })
-        
+
         const outline = await response.json()
         if (outline.status === 'success') {
           // Salvar outline no histórico automaticamente
@@ -68,11 +75,11 @@ export default function PromptOptimizer({
           } catch (error) {
             console.error('Erro ao salvar outline:', error)
           }
-          
-          onComplete(prompt, outline, false, writingTone)  // Passa parâmetros completos
-          addPrompt({ 
-            original: prompt, 
-            optimized: prompt 
+
+          onComplete(prompt, outline, false, writingTone)
+          addPrompt({
+            original: prompt,
+            optimized: prompt
           })
           addOutline(outline)
           toast.success('Outline gerado com sucesso!')
@@ -96,20 +103,16 @@ export default function PromptOptimizer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_prompt: prompt })
       })
-      
-      console.log('Status da resposta:', response.status)
+
       const data = await response.json()
-      console.log('Dados recebidos:', data)
       if (data.status === 'success') {
         setOptimizedData(data)
-        // Salvar prompt otimizado no store
         addPrompt({
           original: prompt,
           optimized: data.optimized_prompt
         })
         toast.success('Prompt otimizado com sucesso!')
       } else {
-        console.error('Erro na resposta:', data)
         toast.error(`Erro ao otimizar prompt: ${data.message || 'Erro desconhecido'}`)
       }
     } catch (error) {
@@ -126,15 +129,15 @@ export default function PromptOptimizer({
       const response = await fetch('http://localhost:8000/api/book/generate-outline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           prompt: optimizedData.optimized_prompt,
           target_audience: optimizedData.target_audience
         })
       })
-      
+
       const outline = await response.json()
       if (outline.status === 'success') {
-        // Salvar outline no histórico automaticamente
+        // Salvar outline no histórico
         try {
           await fetch('http://localhost:8000/api/outline/history', {
             method: 'POST',
@@ -150,17 +153,15 @@ export default function PromptOptimizer({
           })
         } catch (saveError) {
           console.error('Erro ao salvar no histórico:', saveError)
-          // Não interrompe o fluxo se falhar ao salvar no histórico
         }
 
-        // Salvar outline no store
         addOutline({
           bookTitle: optimizedData.suggested_title,
           refinedPrompt: optimizedData.optimized_prompt,
           totalChapters: outline.chapters?.length || 0,
           chapters: outline.chapters || []
         })
-        onComplete(optimizedData.optimized_prompt, outline, true, writingTone)  // Passa parâmetros completos
+        onComplete(optimizedData.optimized_prompt, outline, true, writingTone)
       } else {
         toast.error('Erro ao gerar outline')
       }
@@ -194,125 +195,138 @@ export default function PromptOptimizer({
   }
 
   return (
-    <div className="wizard-step prompt-optimizer">
-      <div className="step-header">
-        <h2>📝 Descreva seu Ebook</h2>
-        <p>Comece com uma ideia simples e nossa IA ajudará a expandi-la.</p>
+    <div className={`wizard-step prompt-optimizer ${!isOpen ? 'collapsed' : ''}`}>
+      <div
+        className="step-header clickable"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      >
+        <div>
+          <h2>📝 Descreva seu Ebook</h2>
+          <p>Comece com uma ideia simples e nossa IA ajudará a expandi-la.</p>
+        </div>
+        <button className="toggle-collapse-btn">
+          {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
       </div>
 
-      <div className="prompt-input-container">
-        <WritingToneSelector 
-          selectedTone={writingTone}
-          onToneChange={setWritingTone}
-          disabled={isOptimizing || isGeneratingOutline || !!optimizedData}
-        />
-        
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Ex: Aprendendo usando a Tecnologia do Notebook LM - 3 capítulos com 2 páginas cada, focado em prática e exemplos..."
-          rows={4}
-          disabled={isOptimizing || isGeneratingOutline || !!optimizedData}
-        />
-        
-        {!optimizedData && (
-          <div className="prompt-actions">
-            <div className="optimizer-toggle">
-              <button 
-                className="toggle-btn"
-                onClick={() => setIsOptimizerEnabled(!isOptimizerEnabled)}
-                title={isOptimizerEnabled ? "Desativar otimizador" : "Ativar otimizador"}
-              >
-                {isOptimizerEnabled ? (
-                  <><ToggleRight /> Otimizador ON</>
-                ) : (
-                  <><ToggleLeft /> Otimizador OFF</>
-                )}
-              </button>
-            </div>
-            
-            <button 
-              className="btn btn-primary btn-lg"
-              onClick={handleOptimize}
-              disabled={isOptimizing || isGeneratingOutline || !prompt.trim()}
-            >
-              {isOptimizing ? (
-                <><Loader className="spinning" /> Otimizando...</>
-              ) : isGeneratingOutline ? (
-                <><Loader className="spinning" /> Gerando...</>
-              ) : (
-                <><Sparkles /> {isOptimizerEnabled ? 'Otimizar Prompt' : 'Gerar Outline'}</>
-              )}
-            </button>
-          </div>
-        )}
-      </div>
+      {isOpen && (
+        <div className="step-content">
+          <div className="prompt-input-container">
+            <WritingToneSelector
+              selectedTone={writingTone}
+              onToneChange={setWritingTone}
+              disabled={isOptimizing || isGeneratingOutline || !!optimizedData}
+            />
 
-      {optimizedData && (
-        <div className="optimization-result">
-          <div className="result-header">
-            <h3>💡 Sugestão Otimizada</h3>
-            <span className="badge">IA Enhanced</span>
-          </div>
-          
-          <div className="optimized-content">
-            <div className="field-group">
-              <label>Título Sugerido:</label>
-              <input 
-                type="text" 
-                value={optimizedData.suggested_title} 
-                onChange={(e) => setOptimizedData({...optimizedData, suggested_title: e.target.value})}
-              />
-            </div>
-            
-            <div className="field-group">
-              <label>Prompt Detalhado:</label>
-              <textarea 
-                value={optimizedData.optimized_prompt}
-                onChange={(e) => setOptimizedData({...optimizedData, optimized_prompt: e.target.value})}
-                rows={6}
-              />
-            </div>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Ex: Aprendendo usando a Tecnologia do Notebook LM - 3 capítulos com 2 páginas cada, focado em prática e exemplos..."
+              rows={4}
+              disabled={isOptimizing || isGeneratingOutline || !!optimizedData}
+            />
 
-            <div className="meta-info">
-              <div className="meta-item">
-                <strong>Público:</strong> {optimizedData.target_audience}
+            {!optimizedData && (
+              <div className="prompt-actions">
+                <div className="optimizer-toggle">
+                  <button
+                    className="toggle-btn"
+                    onClick={() => setIsOptimizerEnabled(!isOptimizerEnabled)}
+                    title={isOptimizerEnabled ? "Desativar otimizador" : "Ativar otimizador"}
+                  >
+                    {isOptimizerEnabled ? (
+                      <><ToggleRight /> Otimizador ON</>
+                    ) : (
+                      <><ToggleLeft /> Otimizador OFF</>
+                    )}
+                  </button>
+                </div>
+
+                <button
+                  className="btn btn-primary btn-lg"
+                  onClick={handleOptimize}
+                  disabled={isOptimizing || isGeneratingOutline || !prompt.trim()}
+                >
+                  {isOptimizing ? (
+                    <><Loader className="spinning" /> Otimizando...</>
+                  ) : isGeneratingOutline ? (
+                    <><Loader className="spinning" /> Gerando...</>
+                  ) : (
+                    <><Sparkles /> {isOptimizerEnabled ? 'Otimizar Prompt' : 'Gerar Outline'}</>
+                  )}
+                </button>
               </div>
-              <div className="meta-item">
-                <strong>Capítulos Est.:</strong> {optimizedData.estimated_chapters}
-              </div>
-            </div>
-            
-            <div className="suggestions-list">
-              <strong>Sugestões Adicionais:</strong>
-              <ul>
-                {optimizedData.suggestions.map((s: string, i: number) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
+            )}
           </div>
 
-          <div className="action-buttons">
-            <button 
-              className="btn btn-secondary"
-              onClick={() => setOptimizedData(null)}
-            >
-              <AlertCircle size={18} /> Rejeitar e Editar
-            </button>
-            
-            <button 
-              className="btn btn-primary"
-              onClick={handleAccept}
-              disabled={isGeneratingOutline}
-            >
-              {isGeneratingOutline ? (
-                <><Loader className="spinning" /> Gerando Escopo...</>
-              ) : (
-                <><CheckCircle size={18} /> Aprovar e Gerar Escopo</>
-              )}
-            </button>
-          </div>
+          {optimizedData && (
+            <div className="optimization-result">
+              <div className="result-header">
+                <h3>💡 Sugestão Otimizada</h3>
+                <span className="badge">IA Enhanced</span>
+              </div>
+
+              <div className="optimized-content">
+                <div className="field-group">
+                  <label>Título Sugerido:</label>
+                  <input
+                    type="text"
+                    value={optimizedData.suggested_title}
+                    onChange={(e) => setOptimizedData({ ...optimizedData, suggested_title: e.target.value })}
+                  />
+                </div>
+
+                <div className="field-group">
+                  <label>Prompt Detalhado:</label>
+                  <textarea
+                    value={optimizedData.optimized_prompt}
+                    onChange={(e) => setOptimizedData({ ...optimizedData, optimized_prompt: e.target.value })}
+                    rows={6}
+                  />
+                </div>
+
+                <div className="meta-info">
+                  <div className="meta-item">
+                    <strong>Público:</strong> {optimizedData.target_audience}
+                  </div>
+                  <div className="meta-item">
+                    <strong>Capítulos Est.:</strong> {optimizedData.estimated_chapters}
+                  </div>
+                </div>
+
+                <div className="suggestions-list">
+                  <strong>Sugestões Adicionais:</strong>
+                  <ul>
+                    {optimizedData.suggestions.map((s: string, i: number) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="action-buttons">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setOptimizedData(null)}
+                >
+                  <AlertCircle size={18} /> Rejeitar e Editar
+                </button>
+
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAccept}
+                  disabled={isGeneratingOutline}
+                >
+                  {isGeneratingOutline ? (
+                    <><Loader className="spinning" /> Gerando Escopo...</>
+                  ) : (
+                    <><CheckCircle size={18} /> Aprovar e Gerar Escopo</>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

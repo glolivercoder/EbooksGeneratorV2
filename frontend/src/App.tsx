@@ -4,9 +4,9 @@ import { useTheme } from './stores/themeStore'
 import { Toaster } from 'react-hot-toast'
 import SettingsPanel from './components/Settings/SettingsPanel'
 import BookWizard from './components/BookWizard/BookWizard'
+import EditorCentral from './components/BookWizard/EditorCentral'
 import LLMSelector from './components/LLMSelector/LLMSelector'
 import HistoryModal from './components/History/HistoryModal'
-import EditorPanel from './components/Editor/EditorPanel'
 import './App.css'
 import './styles/global.css'
 
@@ -15,7 +15,6 @@ function App() {
     const [activeTab, setActiveTab] = useState<'generator' | 'editor' | 'settings'>('generator')
     const [isLLMSelectorOpen, setIsLLMSelectorOpen] = useState(false)
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-    const [isEditorOpen, setIsEditorOpen] = useState(false)
     const [editorContent, setEditorContent] = useState('')
 
     return (
@@ -55,24 +54,24 @@ function App() {
                     </nav>
 
                     <div className="header-actions">
-                        <button 
-                            className="history-btn" 
+                        <button
+                            className="history-btn"
                             onClick={() => setIsHistoryOpen(true)}
                             title="Histórico de Outlines"
                         >
                             <Clock size={18} />
                             <span>Histórico</span>
                         </button>
-                        
-                        <button 
-                            className="llm-models-btn" 
+
+                        <button
+                            className="llm-models-btn"
                             onClick={() => setIsLLMSelectorOpen(true)}
                             title="Configurar Modelos LLM"
                         >
                             <Cpu size={18} />
                             <span>LLM Models</span>
                         </button>
-                        
+
                         <button className="theme-toggle" onClick={toggleTheme} title="Alternar tema">
                             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                         </button>
@@ -83,30 +82,19 @@ function App() {
             {/* Main Content */}
             <main className="app-main">
                 {activeTab === 'generator' && (
-                    <BookWizard 
+                    <BookWizard
                         onSendToEditor={(content) => {
                             setEditorContent(content)
-                            setIsEditorOpen(true)
                             setActiveTab('editor')
                         }}
                     />
                 )}
                 {activeTab === 'editor' && (
-                    <div className="editor-container">
-                        <div className="editor-placeholder">
-                            <Edit3 size={48} />
-                            <h2>Editor de Livros</h2>
-                            <p>Use o gerador para criar conteúdo ou edite diretamente aqui.</p>
-                            <button 
-                                className="btn btn-primary"
-                                onClick={() => {
-                                    setIsEditorOpen(true)
-                                }}
-                            >
-                                <Edit3 size={16} />
-                                Abrir Editor
-                            </button>
-                        </div>
+                    <div className="editor-container" style={{ height: '100%', padding: '20px' }}>
+                        <EditorCentral
+                            content={editorContent}
+                            onContentChange={setEditorContent}
+                        />
                     </div>
                 )}
                 {activeTab === 'settings' && <SettingsPanel />}
@@ -120,28 +108,19 @@ function App() {
             </footer>
 
             {/* LLM Selector Modal */}
-            <LLMSelector 
+            <LLMSelector
                 isOpen={isLLMSelectorOpen}
                 onClose={() => setIsLLMSelectorOpen(false)}
             />
 
             {/* History Modal */}
-            <HistoryModal 
+            <HistoryModal
                 isOpen={isHistoryOpen}
                 onClose={() => setIsHistoryOpen(false)}
                 onRestore={(outline) => {
                     // TODO: Implementar restauração do outline
                     console.log('Outline restaurado:', outline)
                 }}
-            />
-
-            {/* Editor Panel */}
-            <EditorPanel 
-                isOpen={isEditorOpen}
-                onClose={() => setIsEditorOpen(false)}
-                initialContent={editorContent}
-                bookTitle="Meu Ebook"
-                chapterTitle="Conteúdo Gerado"
             />
         </div>
     )

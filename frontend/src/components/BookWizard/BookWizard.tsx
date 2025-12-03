@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import PromptOptimizer from './PromptOptimizer'
 import OutlineEditor from './OutlineEditor'
 import GenerationProgress from './GenerationProgress'
@@ -24,6 +25,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
     const [writingTone, setWritingTone] = useState('didatico')
     const [editorContent, setEditorContent] = useState('')
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+    const [isOutlineExpanded, setIsOutlineExpanded] = useState(true)
 
     const { setCurrentBook, currentBook, isDirty } = useBookStore()
 
@@ -145,8 +147,8 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
     }
 
     const handleGenerationComplete = (_bookData: any) => {
-        // Permanecer em step 2 para usar o EditorCentral
-        setStep(2)
+        // Ir para step 4 (Editor de Conteúdo) após geração
+        setStep(4)
     }
 
     const handleUpdateChapter = (chapterUpdates: any) => {
@@ -224,6 +226,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                     initialPrompt={outline?.refined_prompt || ''}
                     isLocked={step > 1}
                     onReset={handleReset}
+                    initialIsOpen={step === 1}
                 />
             </div>
 
@@ -233,11 +236,38 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                 {/* Centro: OutlineEditor OU Editor */}
                 <div className="wizard-main-center expanded-editor">
                     {step === 2 && outline && (
-                        <OutlineEditor
-                            initialOutline={outline}
-                            onBack={() => setStep(1)}
-                            onComplete={handleOutlineComplete}
-                        />
+                        <div className="outline-editor-container">
+                            <div
+                                className="outline-header-toggle"
+                                onClick={() => setIsOutlineExpanded(!isOutlineExpanded)}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: '10px',
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: 'var(--radius-md)',
+                                    marginBottom: isOutlineExpanded ? '10px' : '0',
+                                    cursor: 'pointer',
+                                    border: '1px solid var(--border)'
+                                }}
+                            >
+                                <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    📚 Escopo do Livro {outline.book_title && `- ${outline.book_title}`}
+                                </h3>
+                                <button className="btn-icon" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
+                                    {isOutlineExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </button>
+                            </div>
+
+                            {isOutlineExpanded && (
+                                <OutlineEditor
+                                    initialOutline={outline}
+                                    onBack={() => setStep(1)}
+                                    onComplete={handleOutlineComplete}
+                                />
+                            )}
+                        </div>
                     )}
 
                     {step === 3 && bookId && (
