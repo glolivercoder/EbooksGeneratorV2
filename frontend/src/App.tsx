@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Moon, Sun, Settings, Book, FileText, Cpu, Clock, Edit3 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Moon, Sun, Settings, Book, FileText, Cpu, Clock, Edit3, LayoutTemplate } from 'lucide-react'
 import { useTheme } from './stores/themeStore'
 import { Toaster } from 'react-hot-toast'
 import SettingsPanel from './components/Settings/SettingsPanel'
 import BookWizard from './components/BookWizard/BookWizard'
 import EditorCentral from './components/BookWizard/EditorCentral'
+import TemplateFlow from './components/Templates/TemplateFlow'
 import LLMSelector from './components/LLMSelector/LLMSelector'
 import HistoryModal from './components/History/HistoryModal'
 import './App.css'
@@ -12,10 +13,26 @@ import './styles/global.css'
 
 function App() {
     const { theme, toggleTheme } = useTheme()
-    const [activeTab, setActiveTab] = useState<'generator' | 'editor' | 'settings'>('generator')
+    const [activeTab, setActiveTab] = useState<'generator' | 'editor' | 'templates' | 'settings'>('generator')
     const [isLLMSelectorOpen, setIsLLMSelectorOpen] = useState(false)
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [editorContent, setEditorContent] = useState('')
+
+    // Listen for template apply event
+    useEffect(() => {
+        const handleApplyTemplate = (event: any) => {
+            const html = event.detail?.html || sessionStorage.getItem('templateHTML')
+            if (html) {
+                setEditorContent(html)
+                setActiveTab('editor')
+                sessionStorage.removeItem('templateHTML')
+                sessionStorage.removeItem('templateApplied')
+            }
+        }
+
+        window.addEventListener('applyTemplate', handleApplyTemplate)
+        return () => window.removeEventListener('applyTemplate', handleApplyTemplate)
+    }, [])
 
     return (
         <div className="app">
@@ -43,6 +60,13 @@ function App() {
                         >
                             <Edit3 size={18} />
                             <span>Editor</span>
+                        </button>
+                        <button
+                            className={`nav-tab ${activeTab === 'templates' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('templates')}
+                        >
+                            <LayoutTemplate size={18} />
+                            <span>Templates</span>
                         </button>
                         <button
                             className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
@@ -95,6 +119,11 @@ function App() {
                             content={editorContent}
                             onContentChange={setEditorContent}
                         />
+                    </div>
+                )}
+                {activeTab === 'templates' && (
+                    <div className="templates-container" style={{ height: '100%' }}>
+                        <TemplateFlow />
                     </div>
                 )}
                 {activeTab === 'settings' && <SettingsPanel />}
