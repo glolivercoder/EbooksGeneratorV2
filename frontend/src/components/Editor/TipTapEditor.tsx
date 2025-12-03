@@ -10,9 +10,13 @@ import CharacterCount from '@tiptap/extension-character-count'
 import FontFamily from '@tiptap/extension-font-family'
 import Mathematics from '@tiptap/extension-mathematics'
 import Image from '@tiptap/extension-image'
-import { BubbleMenu } from '@tiptap/react'
+
 import ResizeImage from 'tiptap-extension-resize-image'
 import Columns from '@tiptap-extend/columns'
+import { Table } from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
 import { useEffect, useState, useRef } from 'react'
 import SaveStatusIndicator from '../UI/SaveStatusIndicator'
 import PixabayModal from './PixabayModal'
@@ -20,7 +24,7 @@ import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
 
-import { FolderOpen, Save, FileDown } from 'lucide-react'
+import { FolderOpen, Save, FileDown, Table2, LineChart } from 'lucide-react'
 
 interface TipTapEditorProps {
   content?: string
@@ -28,7 +32,7 @@ interface TipTapEditorProps {
   onAutoSave?: (content: string) => void
   onSave?: () => void
   onOpen?: () => void
-  onExport?: () => void
+  onExport?: (format?: string) => void
   placeholder?: string
   editable?: boolean
   autoSaveDelay?: number
@@ -48,8 +52,70 @@ export default function TipTapEditor({
   const [wordCount, setWordCount] = useState(0)
   const [characterCount, setCharacterCount] = useState(0)
   const [isPixabayModalOpen, setIsPixabayModalOpen] = useState(false)
+  const [showMermaidDropdown, setShowMermaidDropdown] = useState(false)
+  const [showExportDropdown, setShowExportDropdown] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const autoSaveTimerRef = useRef<number | null>(null)
   const lastSavedContentRef = useRef<string>(content)
+
+  // Handle local image upload
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string
+        editor?.chain().focus().setImage({ src: imageUrl }).run()
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Mermaid chart templates
+  const mermaidTemplates = {
+    flowchart: `graph TD
+    A[Início] --> B{Decisão?}
+    B -->|Sim| C[Resultado 1]
+    B -->|Não| D[Resultado 2]
+    C --> E[Fim]
+    D --> E`,
+    sequence: `sequenceDiagram
+    participant A as Usuário
+    participant B as Sistema
+    A->>B: Requisição
+    B->>A: Resposta`,
+    gantt: `gantt
+    title Cronograma do Projeto
+    dateFormat YYYY-MM-DD
+    section Fase 1
+    Tarefa 1: 2024-01-01, 30d
+    Tarefa 2: 2024-02-01, 20d`,
+    pie: `pie title Distribuição
+    "Categoria A" : 45
+    "Categoria B" : 30
+    "Categoria C" : 25`,
+    class: `classDiagram
+    class Animal {
+      +String nome
+      +int idade
+      +fazerSom()
+    }
+    class Cachorro {
+      +latir()
+    }
+    Animal <|-- Cachorro`,
+    state: `stateDiagram-v2
+    [*] --> Inativo
+    Inativo --> Ativo: iniciar
+    Ativo --> Inativo: parar
+    Ativo --> [*]`,
+  }
+
+  const insertMermaidChart = (type: keyof typeof mermaidTemplates) => {
+    const template = mermaidTemplates[type]
+    editor?.chain().focus().insertContent(`\n\`\`\`mermaid\n${template}\n\`\`\`\n`).run()
+    setShowMermaidDropdown(false)
+  }
 
   const editor = useEditor({
     extensions: [
@@ -90,6 +156,12 @@ export default function TipTapEditor({
       Image,
       ResizeImage,
       Columns,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content,
     editable,
@@ -162,6 +234,123 @@ export default function TipTapEditor({
 
     return (
       <div className="menu-bar">
+        {/* File Operations */}
+        <div className="menu-group">
+          {onOpen && (
+            <button
+              onClick={onOpen}
+              className="menu-btn"
+              title="Abrir arquivo"
+            >
+              <FolderOpen size={16} />
+            </button>
+          )}
+          {onSave && (
+            <button
+              onClick={onSave}
+              className="menu-btn"
+              title="Salvar arquivo"
+            >
+              <Save size={16} />
+            </button>
+          )}
+          {onExport && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+                className="menu-btn"
+                title="Exportar arquivo"
+              >
+                <FileDown size={16} />
+              </button>
+              {showExportDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  marginTop: '4px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 1000,
+                  minWidth: '160px',
+                  overflow: 'hidden'
+                }}>
+                  <button
+                    onClick={() => { onExport('pdf'); setShowExportDropdown(false) }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      color: 'var(--text-primary)',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    📄 PDF
+                  </button>
+                  <button
+                    onClick={() => { onExport('rtf'); setShowExportDropdown(false) }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      color: 'var(--text-primary)',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    📝 Rich Text (RTF)
+                  </button>
+                  <button
+                    onClick={() => { onExport('docx'); setShowExportDropdown(false) }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      color: 'var(--text-primary)',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    📘 Word (DOCX)
+                  </button>
+                  <button
+                    onClick={() => { onExport('odt'); setShowExportDropdown(false) }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      color: 'var(--text-primary)',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    📗 LibreOffice (ODT)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="menu-group">
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -227,6 +416,38 @@ export default function TipTapEditor({
           </button>
         </div>
 
+        {/* Text Alignment */}
+        <div className="menu-group">
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            className={`menu-btn ${editor.isActive({ textAlign: 'left' }) ? 'active' : ''}`}
+            title="Alinhar à esquerda"
+          >
+            ⬅
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            className={`menu-btn ${editor.isActive({ textAlign: 'center' }) ? 'active' : ''}`}
+            title="Centralizar"
+          >
+            ↔
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            className={`menu-btn ${editor.isActive({ textAlign: 'right' }) ? 'active' : ''}`}
+            title="Alinhar à direita"
+          >
+            ➡
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+            className={`menu-btn ${editor.isActive({ textAlign: 'justify' }) ? 'active' : ''}`}
+            title="Justificar"
+          >
+            ≡
+          </button>
+        </div>
+
         <div className="menu-group">
           <label className="menu-label" title="Cor do texto">
             Cor:
@@ -278,19 +499,148 @@ export default function TipTapEditor({
           >
             ∑
           </button>
-          <button
-            onClick={() => {
-              const mermaidCode = prompt('Digite o código Mermaid:\n\nExemplo:\ngraph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;')
-              if (mermaidCode) {
-                editor.chain().focus().insertContent(`\n\`\`\`mermaid\n${mermaidCode}\n\`\`\`\n`).run()
-              }
-            }}
-            className="menu-btn"
-            title="Inserir diagrama Mermaid"
-          >
-            📊
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowMermaidDropdown(!showMermaidDropdown)}
+              className="menu-btn"
+              title="Inserir diagrama/gráfico"
+            >
+              <LineChart size={16} />
+            </button>
+            {showMermaidDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '4px',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                minWidth: '200px',
+                overflow: 'hidden'
+              }}>
+                <button
+                  onClick={() => insertMermaidChart('flowchart')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  📊 Fluxograma
+                </button>
+                <button
+                  onClick={() => insertMermaidChart('sequence')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  🔄 Diagrama de Sequência
+                </button>
+                <button
+                  onClick={() => insertMermaidChart('gantt')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  📅 Gráfico de Gantt
+                </button>
+                <button
+                  onClick={() => insertMermaidChart('pie')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  🥧 Gráfico de Pizza
+                </button>
+                <button
+                  onClick={() => insertMermaidChart('class')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  🏛️ Diagrama de Classes
+                </button>
+                <button
+                  onClick={() => insertMermaidChart('state')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  🔀 Diagrama de Estados
+                </button>
+              </div>
+            )}
+          </div>
 
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="menu-btn"
+            title="Upload imagem do dispositivo"
+          >
+            📁
+          </button>
           <button
             onClick={() => setIsPixabayModalOpen(true)}
             className="menu-btn"
@@ -321,6 +671,33 @@ export default function TipTapEditor({
             title="Remover Colunas"
           >
             ⬛
+          </button>
+        </div>
+
+        {/* Table Controls */}
+        <div className="menu-group">
+          <button
+            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            className="menu-btn"
+            title="Inserir tabela"
+          >
+            <Table2 size={16} />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            disabled={!editor.can().addColumnAfter()}
+            className="menu-btn"
+            title="Adicionar coluna"
+          >
+            ➕
+          </button>
+          <button
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            disabled={!editor.can().deleteTable()}
+            className="menu-btn"
+            title="Remover tabela"
+          >
+            🗑️
           </button>
         </div>
 

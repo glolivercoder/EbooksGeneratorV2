@@ -10,6 +10,7 @@ interface EditorCentralProps {
   outline?: any
   content?: string
   onContentChange?: (content: string) => void
+  onOpenSavedFiles?: () => void
 }
 
 /**
@@ -71,7 +72,7 @@ function convertMarkdownToHTML(md: string): string {
   }
 }
 
-export default function EditorCentral({ content = '', onContentChange }: EditorCentralProps) {
+export default function EditorCentral({ content = '', onContentChange, onOpenSavedFiles }: EditorCentralProps) {
   const { markSaved, setIsSaving, currentBook, setCurrentBook } = useBookStore()
 
   // Handler para auto-save
@@ -108,8 +109,11 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
   }
 
   const handleOpenFiles = () => {
-    // Trigger saved files modal (via prop or global state)
-    alert('Funcionalidade: Abrir modal de arquivos salvos')
+    if (onOpenSavedFiles) {
+      onOpenSavedFiles()
+    } else {
+      alert('Funcionalidade: Abrir modal de arquivos salvos')
+    }
   }
 
   const handleSaveToDisk = () => {
@@ -130,20 +134,21 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
     console.log('✓ Arquivo HTML salvo no dispositivo')
   }
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (format: string = '1') => {
     if (!htmlContent) {
       alert('Nenhum conteúdo para exportar')
       return
     }
 
-    // Menu de exportação
-    const format = prompt('Escolha o formato:\n1 - PDF\n2 - Rich Text (RTF)\n3 - Word (DOCX)\n4 - LibreOffice (ODT)\n\nDigite o número:', '1')
+    // Format is now passed directly, no prompt needed unless undefined
+    // But we expect the dropdown to pass 'pdf', 'rtf', 'docx', 'odt' or '1', '2', '3', '4'
 
     if (!format) return
 
     const fileName = currentBook?.title || 'documento'
 
     switch (format) {
+      case 'pdf':
       case '1':
         // PDF export
         const printWindow = window.open('', '_blank')
@@ -155,6 +160,7 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
           printWindow.print()
         }
         break
+      case 'rtf':
       case '2':
         // RTF export (simplified HTML to RTF conversion)
         const rtfContent = `{\\rtf1\\ansi\\deff0 ${htmlContent.replace(/<[^>]*>/g, '')}}`
@@ -166,7 +172,9 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
         rtfLink.click()
         URL.revokeObjectURL(rtfUrl)
         break
+      case 'docx':
       case '3':
+      case 'odt':
       case '4':
         alert('Exportação DOCX/ODT: Use "Salvar como HTML" e abra no Word/LibreOffice para converter')
         handleSaveToDisk()
@@ -243,7 +251,7 @@ export default function EditorCentral({ content = '', onContentChange }: EditorC
           onAutoSave={handleAutoSave}
           onOpen={handleOpenFiles}
           onSave={handleSaveToDisk}
-          onExport={handleExportPDF}
+          onExport={(format) => handleExportPDF(format)}
         />
       </div>
     </div>

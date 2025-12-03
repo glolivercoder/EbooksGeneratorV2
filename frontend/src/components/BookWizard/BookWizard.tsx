@@ -284,6 +284,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
                             outline={outline}
                             content={editorContent}
                             onContentChange={setEditorContent}
+                            onOpenSavedFiles={() => setIsSavedFilesModalOpen(true)}
                         />
                     )}
                 </div>
