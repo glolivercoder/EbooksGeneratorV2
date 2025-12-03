@@ -1,0 +1,133 @@
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Literal, Optional, List, Dict
+import openai
+from config.settings import settings
+
+router = APIRouter()
+
+class TemplateGenerateRequest(BaseModel):
+    type: Literal['book', 'magazine', 'presentation', 'custom'] = 'book'
+    pages: int = 5
+    theme: str = 'modern'
+    description: Optional[str] = None
+
+class NodeData(BaseModel):
+    id: str
+    type: str
+    position: Dict[str, float]
+    data: Dict
+
+class EdgeData(BaseModel):
+    id: str
+    source: str
+    target: str
+
+class TemplateGenerateResponse(BaseModel):
+    nodes: List[NodeData]
+    edges: List[EdgeData]
+
+@router.post("/templates/generate", response_model=TemplateGenerateResponse)
+async def generate_template(request: TemplateGenerateRequest):
+    """
+    Generate a template structure using OpenAI GPT-4o-mini
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if not settings.openai_api_key:
+        logger.error("OpenAI API key not configured")
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured in .env")
+    
+    try:
+        import openai as openai_module
+        logger.info(f"OpenAI module imported successfully. Version: {openai_module.__version__ if hasattr(openai_module, '__version__') else 'unknown'}")
+    except ImportError as e:
+        logger.error(f"OpenAI module not found: {e}")
+        raise HTTPException(status_code=500, detail="OpenAI library not installed. Run: pip install openai")
+    
+    try:
+        client = openai.OpenAI(api_key=settings.openai_api_key)
+        logger.info(f"Generating template: type={request.type}, pages={request.pages}, theme={request.theme}")
+        
+        # Build prompt for GPT
+        prompt = f"""Gere um template de {request.type} com {request.pages} páginas no estilo {request.theme}.
+
+Retorne APENAS um JSON válido com esta estrutura exata:
+{{
+  "nodes": [
+    {{
+      "id": "page-1",
+      "type": "page",
+      "position": {{ "x": 250, "y": 0 }},
+      "data": {{ "label": "Capa", "content": "Título do {request.type}" }}
+    }},
+    {{
+      "id": "chapter-1",
+      "type": "chapter",
+      "position": {{ "x": 100, "y": 150 }},
+      "data": {{ "title": "Capítulo 1", "content": "Introdução..." }}
+    }},
+    {{
+      "id": "image-1",
+      "type": "image",
+      "position": {{ "x": 400, "y": 150 }},
+      "data": {{ "src": "", "alt": "Imagem ilustrativa" }}
+    }},
+    {{
+      "id": "textblock-1",
+      "type": "textBlock",
+      "position": {{ "x": 250, "y": 300 }},
+      "data": {{ "text": "Parágrafo de conteúdo..." }}
+    }}
+  ],
+  "edges": [
+    {{ "id": "e1-2", "source": "page-1", "target": "chapter-1" }}
+  ]
+}}
+
+Tipos de nodes disponíveis:
+- page: Páginas do documento (label, content)
+- chapter: Capítulos (title, content)
+- image: Imagens (src, alt)
+- textBlock: Blocos de texto (text)
+- layout: Layouts em colunas (columns: 2 ou 3, content)
+
+Posiciona os nodes de forma visualmente organizada (vertical e horizontal).
+{f"Descrição adicional: {request.description}" if request.description else ""}
+"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Você é um designer de templates inteligente. Retorne APENAS JSON válido, sem explicações."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            response_format={ "type": "json_object" }
+        )
+        
+        content = response.choices[0].message.content
+        logger.info(f"GPT Response received: {len(content)} characters")
+        
+        # Parse JSON response
+        import json
+        template_data = json.loads(content)
+        
+        logger.info(f"Template generated successfully: {len(template_data.get('nodes', []))} nodes, {len(template_data.get('edges', []))} edges")
+        
+        return TemplateGenerateResponse(
+            nodes=template_data.get("nodes", []),
+            edges=template_data.get("edges", [])
+        )
+        
+    except openai.AuthenticationError as e:
+        logger.error(f"OpenAI Authentication Error: {e}")
+        raise HTTPException(status_code=500, detail="Invalid OpenAI API key. Check your .env file.")
+    except openai.RateLimitError as e:
+        logger.error(f"OpenAI Rate Limit Error: {e}")
+        raise HTTPException(status_code=429, detail="OpenAI rate limit exceeded. Please try again later.")
+    except Exception as e:
+        logger.error(f"Error generating template: {type(e).__name__}: {str(e)}")
+        logger.exception("Full traceback:")
+        raise HTTPException(status_code=500, detail=f"Failed to generate template: {type(e).__name__}: {str(e)}")

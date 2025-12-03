@@ -1,6 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Blockquote from '@tiptap/extension-blockquote'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import Color from '@tiptap/extension-color'
@@ -24,7 +25,8 @@ import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
 
-import { FolderOpen, Save, FileDown, Table2, LineChart } from 'lucide-react'
+import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface TipTapEditorProps {
   content?: string
@@ -54,6 +56,9 @@ export default function TipTapEditor({
   const [isPixabayModalOpen, setIsPixabayModalOpen] = useState(false)
   const [showMermaidDropdown, setShowMermaidDropdown] = useState(false)
   const [showExportDropdown, setShowExportDropdown] = useState(false)
+  const [showMermaidAIModal, setShowMermaidAIModal] = useState(false)
+  const [diagramDescription, setDiagramDescription] = useState('')
+  const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoSaveTimerRef = useRef<number | null>(null)
   const lastSavedContentRef = useRef<string>(content)
@@ -136,6 +141,11 @@ export default function TipTapEditor({
         },
       }),
       Underline,
+      Blockquote.configure({
+        HTMLAttributes: {
+          class: 'blockquote',
+        },
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
         alignments: ['left', 'center', 'right', 'justify'],
@@ -220,6 +230,43 @@ export default function TipTapEditor({
       editor.setEditable(editable)
     }
   }, [editable, editor])
+
+  const generateMermaidWithAI = async () => {
+    if (!diagramDescription.trim()) {
+      toast.error('Por favor, descreva o diagrama')
+      return
+    }
+
+    setIsGeneratingDiagram(true)
+    toast.loading('Gerando diagrama...', { id: 'diagram-gen' })
+
+    try {
+      const response = await fetch('http://localhost:8000/api/diagrams/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: diagramDescription,
+          diagram_type: 'auto'
+        })
+      })
+
+      if (!response.ok) throw new Error('Falha na geração')
+
+      const data = await response.json()
+
+      editor?.chain().focus().insertContent(`\n${data.mermaid_code}\n`).run()
+
+      toast.success(`Diagrama gerado! Custo: $${data.cost.toFixed(4)}`, { id: 'diagram-gen' })
+      setShowMermaidAIModal(false)
+      setDiagramDescription('')
+
+    } catch (error) {
+      console.error('Erro ao gerar diagrama:', error)
+      toast.error('Erro ao gerar diagrama', { id: 'diagram-gen' })
+    } finally {
+      setIsGeneratingDiagram(false)
+    }
+  }
 
   if (!editor) {
     return (
@@ -413,6 +460,16 @@ export default function TipTapEditor({
             title="Lista numerada"
           >
             1.
+          </button>
+        </div>
+
+        <div className="menu-group">
+          <button
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={`menu-btn ${editor.isActive('blockquote') ? 'active' : ''}`}
+            title="Citação"
+          >
+            <Quote size={16} />
           </button>
         </div>
 
@@ -648,6 +705,14 @@ export default function TipTapEditor({
           >
             🖼️
           </button>
+
+          <button
+            onClick={() => setShowMermaidAIModal(true)}
+            className="menu-btn"
+            title="Gerar Diagrama com IA"
+          >
+            <Sparkles size={16} />
+          </button>
         </div>
 
         <div className="menu-group">
@@ -753,6 +818,71 @@ export default function TipTapEditor({
           editor?.chain().focus().setImage({ src: url, alt }).run()
         }}
       />
+
+      {/* Mermaid AI Modal */}
+      {showMermaidAIModal && (
+        <div className="modal-overlay" onClick={() => setShowMermaidAIModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>✨ Gerar Diagrama com IA</h3>
+            <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '16px' }}>
+              Descreva o diagrama que deseja e a IA irá gerar o código Mermaid automaticamente.
+            </p>
+            <textarea
+              placeholder="Exemplo: 'Fluxo de aprovação de pedidos com 3 níveis: gerente, diretor e CEO'"
+              value={diagramDescription}
+              onChange={(e) => setDiagramDescription(e.target.value)}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '0.95rem',
+                fontFamily: 'inherit',
+                resize: 'vertical'
+              }}
+              autoFocus
+            />
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+              marginTop: '16px'
+            }}>
+              <button
+                onClick={() => setShowMermaidAIModal(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #ddd',
+                  background: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={generateMermaidWithAI}
+                disabled={isGeneratingDiagram || !diagramDescription.trim()}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: isGeneratingDiagram || !diagramDescription.trim() ? '#ccc' : '#667eea',
+                  color: 'white',
+                  cursor: isGeneratingDiagram || !diagramDescription.trim() ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Sparkles size={14} />
+                {isGeneratingDiagram ? 'Gerando...' : 'Gerar Diagrama'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

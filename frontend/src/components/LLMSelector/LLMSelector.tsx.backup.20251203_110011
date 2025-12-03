@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { X, Settings, Cpu, Filter, Check, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import './LLMSelector.css'
-import './LLMSelectorStats.css'
 
 interface LLMModel {
   id: string
@@ -38,8 +37,6 @@ export default function LLMSelector({ isOpen, onClose }: LLMSelectorProps) {
   const [agentsModel, setAgentsModel] = useState<string>('anthropic/claude-3-haiku')
   const [openrouterModels, setOpenrouterModels] = useState<LLMModel[]>([])
   const [isLoadingModels, setIsLoadingModels] = useState(false)
-  const [usageStats, setUsageStats] = useState<any>(null)
-  const [isLoadingStats, setIsLoadingStats] = useState(false)
 
   // Filtros para OpenRouter
   const [companyFilter, setCompanyFilter] = useState<string>('')
@@ -86,31 +83,6 @@ export default function LLMSelector({ isOpen, onClose }: LLMSelectorProps) {
       setIsLoadingModels(false)
     }
   }
-
-  const fetchUsageStats = async () => {
-    setIsLoadingStats(true)
-    try {
-      const response = await fetch('http://localhost:8000/api/templates/stats')
-      const data = await response.json()
-
-      if (data.status === 'success') {
-        setUsageStats(data.stats)
-      } else {
-        console.warn('No usage stats available yet')
-      }
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error)
-    } finally {
-      setIsLoadingStats(false)
-    }
-  }
-
-  // Fetch stats quando abrir modal
-  useEffect(() => {
-    if (isOpen && !usageStats) {
-      fetchUsageStats()
-    }
-  }, [isOpen])
 
   const saveConfig = () => {
     const config = {
@@ -321,38 +293,6 @@ export default function LLMSelector({ isOpen, onClose }: LLMSelectorProps) {
                 <span className="model-selected">{agentsModel}</span>
               </div>
             </div>
-          </div>
-
-          {/* Usage Stats & Costs */}
-          <div className="usage-stats">
-            <h3>💰 Custos de Uso</h3>
-            {isLoadingStats ? (
-              <p>Carregando...</p>
-            ) : usageStats ? (
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <label>Custo Total:</label>
-                  <span className="stat-value">${usageStats.total_cost.toFixed(4)}</span>
-                </div>
-                <div className="stat-card">
-                  <label>Total de Requests:</label>
-                  <span className="stat-value">{usageStats.total_requests}</span>
-                </div>
-                <div className="stat-card">
-                  <label>Custo Médio:</label>
-                  <span className="stat-value">${usageStats.average_cost_per_request.toFixed(4)}</span>
-                </div>
-              </div>
-            ) : (
-              <p>Sem dados de uso ainda</p>
-            )}
-            <button
-              className="btn btn-secondary"
-              onClick={fetchUsageStats}
-              disabled={isLoadingStats}
-            >
-              <RefreshCw size={14} /> Atualizar Estatísticas
-            </button>
           </div>
         </div>
 

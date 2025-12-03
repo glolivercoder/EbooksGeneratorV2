@@ -18,6 +18,8 @@ from datetime import datetime
 from config.settings import settings
 from services.env_manager import env_manager
 from api.backup import router as backup_router
+from routes.templates import router as templates_router
+from routes.diagrams import router as diagrams_router
 from agents.orchestrator import orchestrator
 from services.llm_client import llm_client, TaskType
 
@@ -666,6 +668,8 @@ async def create_agent_dynamically(spec: Dict[str, Any]):
 
 # Incluir routers
 app.include_router(backup_router)
+app.include_router(templates_router, prefix="/api", tags=["templates"])
+app.include_router(diagrams_router, prefix="/api", tags=["diagrams"])
 
 # ==================== OpenRouter Models Endpoint ====================
 
