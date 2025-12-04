@@ -10,9 +10,7 @@ Especialista em:
 
 from typing import Dict, List, Any
 import json
-from config.settings import get_settings
-
-settings = get_settings()
+from config.settings import settings
 
 DESIGNER_SYSTEM_PROMPT = """
 Você é um designer gráfico sênior especializado em editoração de livros e revistas.
@@ -102,7 +100,7 @@ Retorne APENAS o JSON, sem comentários adicionais.
             response = await get_llm_response(
                 prompt=prompt,
                 system_prompt=self.system_prompt,
-                model=settings.OPENROUTER_MODEL
+                model=settings.generation_model
             )
             
             # Parse JSON response
@@ -185,7 +183,7 @@ Retorne APENAS o JSON.
             response = await get_llm_response(
                 prompt=prompt,
                 system_prompt=self.system_prompt,
-                model=settings.OPENROUTER_MODEL
+                model=settings.generation_model
             )
             
             cover_design = json.loads(response)
