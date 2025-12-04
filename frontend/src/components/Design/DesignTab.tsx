@@ -3,18 +3,21 @@ import { Palette, Type, Layout, Image, Layers, Sparkles, Settings } from 'lucide
 import DesignCanvas from './DesignCanvas'
 import DesignToolbar from './DesignToolbar'
 import DesignSidebar from './DesignSidebar'
+import TemplatePreview from './TemplatePreview'
 import ModelPicker from './ModelPicker'
 import ImageUploader from './ImageUploader'
 import { analyzeContent, DesignAnalysis } from '../../services/designService'
 import { useDesignStore } from '../../stores/designStore'
+import { useTemplatePreviewStore } from '../../stores/templatePreviewStore'
 import { ModelInfo } from '../../services/modelService'
 import './DesignTab.css'
 
 interface DesignTabProps {
     onApplyToEditor?: (html: string) => void
+    onSwitchTab?: (tab: string) => void
 }
 
-export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
+export default function DesignTab({ onApplyToEditor, onSwitchTab }: DesignTabProps) {
     const [activeSidebarTab, setActiveSidebarTab] = useState<'colors' | 'typography' | 'layout' | 'images' | 'layers'>('colors')
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
@@ -22,6 +25,7 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
     const [customPrompt, setCustomPrompt] = useState('')
     const [referenceImage, setReferenceImage] = useState<string | null>(null)
     const { updateColors, updateTypography, saveCurrentAsTemplate } = useDesignStore()
+    const { hasContent } = useTemplatePreviewStore()
 
     const handleExportToEditor = (html: string) => {
         if (onApplyToEditor) {
@@ -170,10 +174,19 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
                     <DesignSidebar activeTab={activeSidebarTab} />
                 </aside>
 
-                {/* Main Canvas Area */}
+                {/* Main Canvas/Preview Area */}
                 <main className="design-main">
-                    <DesignToolbar />
-                    <DesignCanvas onExport={handleExportToEditor} />
+                    {hasContent ? (
+                        <TemplatePreview
+                            onBackToEditor={() => onSwitchTab?.('editor')}
+                            onExport={(format) => console.log('Export:', format)}
+                        />
+                    ) : (
+                        <>
+                            <DesignToolbar />
+                            <DesignCanvas onExport={handleExportToEditor} />
+                        </>
+                    )}
                 </main>
             </div>
         </div>

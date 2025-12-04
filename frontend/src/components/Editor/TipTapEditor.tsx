@@ -32,17 +32,19 @@ import './MermaidStyles.css'
 import { MermaidExtension } from './extensions/MermaidExtension'
 import './TipTapTableStyles.css'
 
-import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles, Wand2 } from 'lucide-react'
+import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles, Wand2, Palette } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useBookStore } from '../../stores/bookStore'
 import { GOOGLE_FONTS } from '../../services/designService'
 import { Type } from 'lucide-react'
+import { useTemplatePreviewStore } from '../../stores/templatePreviewStore'
 
 interface TipTapEditorProps {
   content?: string
   onContentChange?: (content: string) => void
   onAutoSave?: (content: string) => void
   onOpen?: () => void
+  onSwitchTab?: (tab: string) => void
   placeholder?: string
   editable?: boolean
   autoSaveDelay?: number
@@ -53,6 +55,7 @@ export default function TipTapEditor({
   onContentChange,
   onAutoSave,
   onOpen,
+  onSwitchTab,
   placeholder = 'Comece a escrever seu livro...',
   editable = true,
   autoSaveDelay = 2000
@@ -84,6 +87,25 @@ export default function TipTapEditor({
         editor?.chain().focus().setImage({ src: imageUrl }).run()
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  // Send content to Design Tab
+  const handleSendToDesign = () => {
+    if (!editor) return
+
+    const html = editor.getHTML()
+    const text = editor.getText()
+
+    // Store content in template preview store
+    useTemplatePreviewStore.getState().setOriginalContent(html, text)
+
+    // Switch to design tab
+    if (onSwitchTab) {
+      onSwitchTab('design')
+      toast.success('Conteúdo enviado para Design Tab! 🎨')
+    } else {
+      toast.success('Conteúdo copiado! Vá para a aba Design para estilizar.')
     }
   }
 
@@ -653,6 +675,20 @@ export default function TipTapEditor({
               </div>
             )}
           </div>
+
+          {/* Send to Design Button */}
+          <button
+            onClick={handleSendToDesign}
+            className="menu-btn"
+            title="Enviar para Design Tab"
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              fontWeight: '600'
+            }}
+          >
+            <Palette size={16} />
+          </button>
 
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
