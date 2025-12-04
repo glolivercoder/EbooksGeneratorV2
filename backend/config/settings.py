@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # Pixabay API
     pixabay_api_key: str = Field(default="", description="Pixabay API Key")
     
+    # Freepik API
+    freepik_api_key: str = Field(default="", description="Freepik API Key")
+    
     # Model Configuration
     research_model: str = Field(default="anthropic/claude-3-haiku")
     generation_model: str = Field(default="google/gemini-pro-1.5")

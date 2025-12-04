@@ -50,11 +50,11 @@ class LLMClient:
             ],
             TaskType.ANALYSIS: [
                 "anthropic/claude-3.5-sonnet",
-                "google/gemini-pro-1.5",
+                "google/gemini-flash-1.5",
                 "openai/gpt-4o"
             ],
             TaskType.GENERATION: [
-                "google/gemini-pro-1.5",
+                "google/gemini-flash-1.5",
                 "anthropic/claude-3.5-sonnet",
                 "openai/gpt-4-turbo"
             ],

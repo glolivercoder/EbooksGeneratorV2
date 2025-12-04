@@ -13,7 +13,6 @@ import Mathematics from '@tiptap/extension-mathematics'
 import Image from '@tiptap/extension-image'
 
 import ResizeImage from 'tiptap-extension-resize-image'
-import Columns from '@tiptap-extend/columns'
 import { Table } from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
@@ -21,11 +20,12 @@ import TableCell from '@tiptap/extension-table-cell'
 import { useEffect, useState, useRef } from 'react'
 import SaveStatusIndicator from '../UI/SaveStatusIndicator'
 import PixabayModal from './PixabayModal'
+import FreepikModal from './FreepikModal'
 import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
 
-import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles } from 'lucide-react'
+import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles, Wand2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface TipTapEditorProps {
@@ -54,6 +54,7 @@ export default function TipTapEditor({
   const [wordCount, setWordCount] = useState(0)
   const [characterCount, setCharacterCount] = useState(0)
   const [isPixabayModalOpen, setIsPixabayModalOpen] = useState(false)
+  const [isFreepikModalOpen, setIsFreepikModalOpen] = useState(false)
   const [showMermaidDropdown, setShowMermaidDropdown] = useState(false)
   const [showExportDropdown, setShowExportDropdown] = useState(false)
   const [showMermaidAIModal, setShowMermaidAIModal] = useState(false)
@@ -165,7 +166,6 @@ export default function TipTapEditor({
       Mathematics,
       Image,
       ResizeImage,
-      Columns,
       Table.configure({
         resizable: true,
       }),
@@ -705,6 +705,13 @@ export default function TipTapEditor({
           >
             🖼️
           </button>
+          <button
+            onClick={() => setIsFreepikModalOpen(true)}
+            className="menu-btn"
+            title="Gerar imagem com Freepik IA"
+          >
+            <Wand2 size={16} />
+          </button>
 
           <button
             onClick={() => setShowMermaidAIModal(true)}
@@ -712,30 +719,6 @@ export default function TipTapEditor({
             title="Gerar Diagrama com IA"
           >
             <Sparkles size={16} />
-          </button>
-        </div>
-
-        <div className="menu-group">
-          <button
-            onClick={() => editor.chain().focus().setColumns(2).run()}
-            className="menu-btn"
-            title="2 Colunas"
-          >
-            ❚❚
-          </button>
-          <button
-            onClick={() => editor.chain().focus().setColumns(3).run()}
-            className="menu-btn"
-            title="3 Colunas"
-          >
-            ❚❚❚
-          </button>
-          <button
-            onClick={() => editor.chain().focus().unsetColumns().run()}
-            className="menu-btn"
-            title="Remover Colunas"
-          >
-            ⬛
           </button>
         </div>
 
@@ -814,6 +797,14 @@ export default function TipTapEditor({
       <PixabayModal
         isOpen={isPixabayModalOpen}
         onClose={() => setIsPixabayModalOpen(false)}
+        onSelectImage={(url, alt) => {
+          editor?.chain().focus().setImage({ src: url, alt }).run()
+        }}
+      />
+
+      <FreepikModal
+        isOpen={isFreepikModalOpen}
+        onClose={() => setIsFreepikModalOpen(false)}
         onSelectImage={(url, alt) => {
           editor?.chain().focus().setImage({ src: url, alt }).run()
         }}

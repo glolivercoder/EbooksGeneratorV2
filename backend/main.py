@@ -648,6 +648,92 @@ async def search_pixabay_images(query: str, per_page: int = 10):
     }
 
 
+class FreepikImageRequest(BaseModel):
+    """Request para gerar imagem com Freepik"""
+    prompt: str
+    model: str = "fluid"
+    aspect_ratio: str = "square_1_1"
+    resolution: str = "1k"
+    creative_detailing: int = 20
+
+
+@app.post("/api/images/freepik")
+async def generate_freepik_image(request: FreepikImageRequest):
+    """
+    Gera imagem usando Freepik Mystic API
+    """
+    if not settings.freepik_api_key:
+        raise HTTPException(status_code=400, detail="Freepik API Key não configurada")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.freepik.com/v1/ai/mystic",
+                headers={
+                    "Content-Type": "application/json",
+                    "x-freepik-api-key": settings.freepik_api_key
+                },
+                json={
+                    "prompt": request.prompt,
+                    "model": request.model,
+                    "aspect_ratio": request.aspect_ratio,
+                    "resolution": request.resolution,
+                    "engine": "automatic",
+                    "filter_nsfw": True,
+                    "creative_detailing": getattr(request, 'creative_detailing', 20)
+                }
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Freepik API error: {response.status_code} - {response.text}")
+                raise HTTPException(status_code=response.status_code, detail="Erro ao contatar Freepik")
+                
+            data = response.json()
+            
+            return {
+                "task_id": data["data"]["task_id"],
+                "status": data["data"]["status"],
+                "prompt": request.prompt
+            }
+            
+    except Exception as e:
+        logger.error(f"Erro na geração Freepik: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/images/freepik/{task_id}")
+async def get_freepik_task_status(task_id: str):
+    """
+    Verifica status da tarefa de geração de imagem Freepik
+    """
+    if not settings.freepik_api_key:
+        raise HTTPException(status_code=400, detail="Freepik API Key não configurada")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.freepik.com/v1/ai/mystic/{task_id}",
+                headers={
+                    "x-freepik-api-key": settings.freepik_api_key
+                }
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail="Erro ao verificar status")
+                
+            data = response.json()
+            
+            return {
+                "task_id": task_id,
+                "status": data["data"]["status"],
+                "images": data["data"].get("generated", [])
+            }
+            
+    except Exception as e:
+        logger.error(f"Erro ao verificar status Freepik: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== Dynamic Agent Endpoints ====================
 
 @app.post("/api/agents/create")
