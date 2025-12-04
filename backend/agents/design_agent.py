@@ -192,15 +192,23 @@ Retorne APENAS o JSON.
             return cover_design
             
         except Exception as e:
-            # Fallback design
-            return {
-                "html": f"""
-<div style="width: 800px; height: 1000px; background: linear-gradient(135deg, {primary_color}, {secondary_color}); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; position: relative;">
-    <h1 style="font-family: '{typography.get('heading', 'Inter')}', sans-serif; font-size: 72px; font-weight: 800; color: white; text-align: center; margin: 0;">{title}</h1>
-    {f'<h2 style="font-family: \\'Lato\\', sans-serif; font-size: 32px; font-weight: 300; color: rgba(255,255,255,0.9); margin-top: 20px; text-align: center;">{subtitle}</h2>' if subtitle else ''}
+            # Fallback design - criar HTML do subtitle fora da f-string
+            heading_font = typography.get('heading', 'Inter')
+            
+            # Criar elemento subtitle separadamente para evitar escape issues
+            if subtitle:
+                subtitle_element = f'<h2 style="font-family: \'Lato\', sans-serif; font-size: 32px; font-weight: 300; color: rgba(255,255,255,0.9); margin-top: 20px; text-align: center;">{subtitle}</h2>'
+            else:
+                subtitle_element = ''
+            
+            html_template = f"""<div style="width: 800px; height: 1000px; background: linear-gradient(135deg, {primary_color}, {secondary_color}); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; position: relative;">
+    <h1 style="font-family: '{heading_font}', sans-serif; font-size: 72px; font-weight: 800; color: white; text-align: center; margin: 0;">{title}</h1>
+    {subtitle_element}
     <div style="width: 100px; height: 4px; background: white; margin-top: 40px; border-radius: 2px;"></div>
-</div>
-""",
+</div>"""
+            
+            return {
+                "html": html_template,
                 "css": "",
                 "suggestions": [
                     "Adicione uma imagem de fundo relevante",
