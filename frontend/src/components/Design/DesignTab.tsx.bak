@@ -180,7 +180,6 @@ export default function DesignTab({ onApplyToEditor, onSwitchTab }: DesignTabPro
                         <TemplatePreview
                             onBackToEditor={() => onSwitchTab?.('editor')}
                             onExport={(format) => console.log('Export:', format)}
-                            onApplyToEditor={onApplyToEditor}
                         />
                     ) : (
                         <>

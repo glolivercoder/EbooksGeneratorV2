@@ -11,10 +11,9 @@ import './TemplatePreview.css'
 interface TemplatePreviewProps {
     onBackToEditor?: () => void
     onExport?: (format: string) => void
-    onApplyToEditor?: (html: string) => void
 }
 
-export default function TemplatePreview({ onBackToEditor, onApplyToEditor }: TemplatePreviewProps) {
+export default function TemplatePreview({ onBackToEditor }: TemplatePreviewProps) {
     const {
         originalHTML,
         styledHTML,
@@ -76,27 +75,19 @@ export default function TemplatePreview({ onBackToEditor, onApplyToEditor }: Tem
 
     // Reset currentTheme when config colors change (sidebar click)
     useEffect(() => {
-        if (currentTheme) {
-            const isDifferent =
-                currentTheme.colors !== config.colors ||
-                currentTheme.typography !== config.typography ||
-                currentTheme.id !== 'from-config'
-
-            if (isDifferent) {
-                console.log('⚡ Config changed, updating theme')
-                // Create a new theme from current config instead of null
-                const configTheme = {
-                    id: 'from-config',
-                    name: 'Config Atual',
-                    colors: config.colors,
-                    typography: config.typography,
-                    layout: currentTheme.layout || 'modern', // Preserve layout
-                    createdAt: new Date().toISOString()
-                }
-                setCurrentTheme(configTheme)
+        if (currentTheme && currentTheme.id !== 'from-config') {
+            console.log('⚡ Config changed, resetting to config-based theme')
+            // Create a new theme from current config instead of null
+            const configTheme = {
+                id: 'from-config',
+                name: 'Config Atual',
+                colors: config.colors,
+                typography: config.typography,
+                createdAt: new Date().toISOString()
             }
+            setCurrentTheme(configTheme)
         }
-    }, [config.colors, config.typography, currentTheme, setCurrentTheme])
+    }, [config.colors, currentTheme, config.typography, setCurrentTheme])
 
     const handleThemeChange = (templateId: string) => {
         const template = savedTemplates.find(t => t.id === templateId)
@@ -108,82 +99,10 @@ export default function TemplatePreview({ onBackToEditor, onApplyToEditor }: Tem
     }
 
     const handleBackToEditor = () => {
-        if (!styledHTML) {
-            toast.error('Nenhum conteúdo estilizado disponível')
-            return
-        }
-
-        // Extract only the body content (without full HTML structure)
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(styledHTML, 'text/html')
-
-        // Get the ebook-content div which has the actual styled content
-        const contentDiv = doc.querySelector('.ebook-content')
-
-        if (!contentDiv) {
-            console.warn('Could not find .ebook-content, falling back to body')
-            if (onApplyToEditor) onApplyToEditor(doc.body.innerHTML)
-            if (onBackToEditor) onBackToEditor()
-            return
-        }
-
-        console.log('✅ Sending styled content back to editor')
-
-        if (currentTheme) {
-            // Apply styles to Headings using DOM manipulation to ensure TipTap parses them as Marks
-            const headings = contentDiv.querySelectorAll('h1, h2, h3, h4, h5, h6')
-            headings.forEach((h) => {
-                const el = h as HTMLElement
-                const level = el.tagName.toLowerCase()
-                const color = level === 'h1' ? currentTheme.colors.primary :
-                    level === 'h2' ? currentTheme.colors.secondary :
-                        currentTheme.colors.textPrimary
-
-                // Wrap content in span to ensure TipTap parses it as a Mark (TextStyle/Color/FontFamily)
-                const span = doc.createElement('span')
-                span.style.color = color
-                span.style.fontFamily = currentTheme.typography.heading
-                span.innerHTML = el.innerHTML
-                el.innerHTML = ''
-                el.appendChild(span)
-            })
-
-            // Apply styles to Paragraphs and Lists
-            const texts = contentDiv.querySelectorAll('p, li')
-            texts.forEach((t) => {
-                const el = t as HTMLElement
-                const span = doc.createElement('span')
-                span.style.fontFamily = currentTheme.typography.body
-                span.style.color = currentTheme.colors.textPrimary
-                span.innerHTML = el.innerHTML
-                el.innerHTML = ''
-                el.appendChild(span)
-            })
-
-            // Apply styles to Links
-            const links = contentDiv.querySelectorAll('a')
-            links.forEach((a) => {
-                const el = a as HTMLElement
-                el.style.color = currentTheme.colors.accent
-                el.style.textDecoration = 'none'
-            })
-        }
-
-        const bodyContent = contentDiv.innerHTML
-
-        // Still wrap in a container for good measure
-        const wrapperStyle = `font-family: ${currentTheme?.typography.body || 'inherit'}; color: ${currentTheme?.colors.textPrimary || 'inherit'};`
-        const finalContent = `<div class="design-wrapper" style="${wrapperStyle}">${bodyContent}</div>`
-
-        if (onApplyToEditor) {
-            onApplyToEditor(finalContent)
-        }
-
+        toast.success('Voltando ao editor...')
         if (onBackToEditor) {
             onBackToEditor()
         }
-
-        toast.success('Conteúdo estilizado carregado no editor!')
     }
 
     const deviceWidths = {

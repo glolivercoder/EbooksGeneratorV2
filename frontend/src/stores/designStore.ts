@@ -50,6 +50,7 @@ export interface DesignTemplate {
     description?: string
     colors: ColorScheme
     typography: TypographyConfig
+    layout: 'classic' | 'modern' | 'magazine' | 'minimal' | 'tech'
     createdAt: string
 }
 
@@ -107,11 +108,110 @@ const DEFAULT_CONFIG: DesignConfig = {
     }
 }
 
+const DEFAULT_TEMPLATES: DesignTemplate[] = [
+    {
+        id: 'template-modern-minimal',
+        name: 'Modern Minimalist',
+        description: 'Clean, elegant design with plenty of whitespace',
+        layout: 'minimal',
+        colors: {
+            name: 'Minimal',
+            primary: '#1a202c',
+            secondary: '#4a5568',
+            accent: '#3182ce',
+            background: '#ffffff',
+            surface: '#f7fafc',
+            textPrimary: '#2d3748',
+            textSecondary: '#718096'
+        },
+        typography: {
+            primary: 'Playfair Display',
+            secondary: 'Inter',
+            body: 'Inter',
+            accent: 'Playfair Display',
+            monospace: 'Fira Code'
+        },
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'template-tech-dark',
+        name: 'Tech Dark Mode',
+        description: 'Dark theme optimized for technical content',
+        layout: 'tech',
+        colors: {
+            name: 'Cyberpunk',
+            primary: '#00ff9d',
+            secondary: '#bd00ff',
+            accent: '#00d4ff',
+            background: '#0f172a',
+            surface: '#1e293b',
+            textPrimary: '#e2e8f0',
+            textSecondary: '#94a3b8'
+        },
+        typography: {
+            primary: 'Orbitron',
+            secondary: 'Roboto',
+            body: 'Roboto',
+            accent: 'Fira Code',
+            monospace: 'Fira Code'
+        },
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'template-magazine-vibrant',
+        name: 'Vibrant Magazine',
+        description: 'Bold colors and typography for engaging content',
+        layout: 'magazine',
+        colors: {
+            name: 'Vibrant',
+            primary: '#ff4757',
+            secondary: '#2ed573',
+            accent: '#ffa502',
+            background: '#ffffff',
+            surface: '#f1f2f6',
+            textPrimary: '#2f3542',
+            textSecondary: '#57606f'
+        },
+        typography: {
+            primary: 'Montserrat',
+            secondary: 'Raleway',
+            body: 'Lato',
+            accent: 'Pacifico',
+            monospace: 'Consolas'
+        },
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'template-classic-book',
+        name: 'Classic Literature',
+        description: 'Traditional book layout with serif fonts',
+        layout: 'classic',
+        colors: {
+            name: 'Classic',
+            primary: '#2c3e50',
+            secondary: '#8e44ad',
+            accent: '#c0392b',
+            background: '#fdfbf7', // Cream
+            surface: '#fff',
+            textPrimary: '#2c3e50',
+            textSecondary: '#7f8c8d'
+        },
+        typography: {
+            primary: 'Merriweather',
+            secondary: 'Lora',
+            body: 'Crimson Text',
+            accent: 'Cinzel',
+            monospace: 'Courier Prime'
+        },
+        createdAt: new Date().toISOString()
+    }
+]
+
 export const useDesignStore = create<DesignState>((set, get) => ({
     config: DEFAULT_CONFIG,
     selectedTemplate: null,
     canvasObjects: [],
-    savedTemplates: [],
+    savedTemplates: DEFAULT_TEMPLATES,
 
     updatePageSize: (pageSize) => set((state) => ({
         config: {
@@ -167,6 +267,7 @@ export const useDesignStore = create<DesignState>((set, get) => ({
             description,
             colors: { ...state.config.colors },
             typography: { ...state.config.typography },
+            layout: 'modern',
             createdAt: new Date().toISOString()
         }
         set((state) => ({

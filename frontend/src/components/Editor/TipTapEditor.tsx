@@ -173,6 +173,7 @@ export default function TipTapEditor({
     extensions: [
 
       StarterKit.configure({
+        blockquote: false, // Disable built-in blockquote to use the configured one below
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
         },
@@ -212,11 +213,6 @@ export default function TipTapEditor({
       Mathematics,
       Image,
       ResizeImage,
-      Image,
-      ResizeImage,
-      FontFamily.configure({
-        types: ['textStyle'],
-      }),
       Table.configure({
         resizable: true,
       }),
