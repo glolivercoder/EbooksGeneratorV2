@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Canvas, FabricObject, Rect, Circle, Textbox } from 'fabric'
 import { Download, FileDown } from 'lucide-react'
 import { useDesignStore } from '../../stores/designStore'
 import './DesignCanvas.css'
@@ -9,41 +10,109 @@ interface DesignCanvasProps {
 
 export default function DesignCanvas({ onExport }: DesignCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const [fabricCanvas, setFabricCanvas] = useState<Canvas | null>(null)
     const { config } = useDesignStore()
 
-    // Initialize canvas with placeholder
+    // Initialize Fabric.js v6 canvas
     useEffect(() => {
         if (!canvasRef.current) return
 
-        const ctx = canvasRef.current.getContext('2d')
-        if (!ctx) return
+        const canvas = new Canvas(canvasRef.current, {
+            width: 800,
+            height: 1000,
+            backgroundColor: config.colors.background,
+        })
 
-        // Draw placeholder
-        ctx.fillStyle = config.colors.background
-        ctx.fillRect(0, 0, 800, 1000)
+        // Add welcome text
+        const welcomeText = new Textbox('Clique em "+" para começar', {
+            left: 400,
+            top: 500,
+            width: 400,
+            fontSize: 24,
+            fill: '#999',
+            fontFamily: 'Inter',
+            textAlign: 'center',
+            originX: 'center',
+            originY: 'center',
+        })
 
-        ctx.fillStyle = config.colors.textSecondary
-        ctx.font = '24px Inter'
-        ctx.textAlign = 'center'
-        ctx.fillText('Canvas de Design', 400, 500)
-        ctx.font = '14px Inter'
-        ctx.fillText('(Fabric.js será integrado em breve)', 400, 530)
-    }, [config.colors])
+        canvas.add(welcomeText)
+        setFabricCanvas(canvas)
+
+        return () => {
+            canvas.dispose()
+        }
+    }, [])
+
+    // Update canvas background when theme changes
+    useEffect(() => {
+        if (fabricCanvas && config.colors.background) {
+            fabricCanvas.set('backgroundColor', config.colors.background)
+            fabricCanvas.renderAll()
+        }
+    }, [fabricCanvas, config.colors.background])
 
     const handleAddText = () => {
-        // TODO: Implement with Fabric.js
-        console.log('Add text - Fabric.js integration pending')
+        if (!fabricCanvas) return
+
+        const text = new Textbox('Edite este texto', {
+            left: 100,
+            top: 100,
+            width: 200,
+            fontSize: 32,
+            fill: config.colors.textPrimary,
+            fontFamily: config.typography.primary,
+        })
+
+        fabricCanvas.add(text)
+        fabricCanvas.setActiveObject(text)
+        fabricCanvas.renderAll()
     }
 
     const handleAddRectangle = () => {
-        // TODO: Implement with Fabric.js
-        console.log('Add rectangle - Fabric.js integration pending')
+        if (!fabricCanvas) return
+
+        const rect = new Rect({
+            left: 100,
+            top: 100,
+            width: 200,
+            height: 150,
+            fill: config.colors.primary,
+            stroke: config.colors.secondary,
+            strokeWidth: 2,
+        })
+
+        fabricCanvas.add(rect)
+        fabricCanvas.setActiveObject(rect)
+        fabricCanvas.renderAll()
+    }
+
+    const handleAddCircle = () => {
+        if (!fabricCanvas) return
+
+        const circle = new Circle({
+            left: 100,
+            top: 100,
+            radius: 75,
+            fill: config.colors.accent,
+            stroke: config.colors.primary,
+            strokeWidth: 2,
+        })
+
+        fabricCanvas.add(circle)
+        fabricCanvas.setActiveObject(circle)
+        fabricCanvas.renderAll()
     }
 
     const handleExportPNG = () => {
-        if (!canvasRef.current) return
+        if (!fabricCanvas) return
 
-        const dataURL = canvasRef.current.toDataURL('image/png')
+        const dataURL = fabricCanvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: 1,
+        })
+
         const link = document.createElement('a')
         link.download = 'design-cover.png'
         link.href = dataURL
@@ -51,9 +120,14 @@ export default function DesignCanvas({ onExport }: DesignCanvasProps) {
     }
 
     const handleExportToEditor = () => {
-        if (!canvasRef.current || !onExport) return
+        if (!fabricCanvas || !onExport) return
 
-        const dataURL = canvasRef.current.toDataURL('image/png')
+        const dataURL = fabricCanvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: 1,
+        })
+
         const html = `
       <div class="design-cover" style="text-align: center; margin: 20px 0;">
         <img src="${dataURL}" alt="Design Cover" style="max-width: 100%; height: auto;" />
@@ -64,23 +138,36 @@ export default function DesignCanvas({ onExport }: DesignCanvasProps) {
     }
 
     const handleClear = () => {
-        if (!canvasRef.current) return
+        if (!fabricCanvas) return
+        fabricCanvas.clear()
+        fabricCanvas.set('backgroundColor', config.colors.background)
+        fabricCanvas.renderAll()
+    }
 
-        const ctx = canvasRef.current.getContext('2d')
-        if (!ctx) return
-
-        ctx.fillStyle = config.colors.background
-        ctx.fillRect(0, 0, 800, 1000)
+    const handleDelete = () => {
+        if (!fabricCanvas) return
+        const activeObjects = fabricCanvas.getActiveObjects()
+        if (activeObjects.length) {
+            fabricCanvas.remove(...activeObjects)
+            fabricCanvas.discardActiveObject()
+            fabricCanvas.renderAll()
+        }
     }
 
     return (
         <div className="design-canvas-container">
             <div className="canvas-toolbar">
-                <button onClick={handleAddText} className="tool-btn" disabled>
+                <button onClick={handleAddText} className="tool-btn">
                     + Texto
                 </button>
-                <button onClick={handleAddRectangle} className="tool-btn" disabled>
+                <button onClick={handleAddRectangle} className="tool-btn">
                     + Retângulo
+                </button>
+                <button onClick={handleAddCircle} className="tool-btn">
+                    + Círculo
+                </button>
+                <button onClick={handleDelete} className="tool-btn">
+                    🗑️ Deletar
                 </button>
                 <button onClick={handleClear} className="tool-btn danger">
                     Limpar
@@ -97,11 +184,11 @@ export default function DesignCanvas({ onExport }: DesignCanvasProps) {
             </div>
 
             <div className="canvas-wrapper">
-                <canvas ref={canvasRef} width={800} height={1000} />
+                <canvas ref={canvasRef} />
             </div>
 
-            <div className="canvas-status">
-                <span>⚠️ Fabric.js integration em desenvolvimento - funcionalidade limitada</span>
+            <div className="canvas-info">
+                <span>✨ Fabric.js v6 integrado! Arraste, redimensione e edite objetos livremente.</span>
             </div>
         </div>
     )

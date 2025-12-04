@@ -1,4 +1,3 @@
-import { useDesignStore } from '../../../stores/designStore'
 import ColorPanel from './Panels/ColorPanel'
 import TypographyPanel from './Panels/TypographyPanel'
 import LayoutPanel from './Panels/LayoutPanel'

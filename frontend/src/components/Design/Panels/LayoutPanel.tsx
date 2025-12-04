@@ -1,4 +1,5 @@
 import { useDesignStore } from '../../../stores/designStore'
+import './LayoutPanel.css'
 
 const PAGE_PRESETS = [
     { name: 'A4', width: 210, height: 297 },
@@ -99,72 +100,6 @@ export default function LayoutPanel() {
                     />
                 </div>
             </div>
-
-            <style jsx>{`
-        .layout-section {
-          margin-bottom: 24px;
-        }
-
-        .layout-section h4 {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--text-primary);
-          margin: 0 0 12px 0;
-        }
-
-        .preset-buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-bottom: 12px;
-        }
-
-        .preset-buttons button,
-        .orientation-buttons button {
-          padding: 8px 12px;
-          border: 1px solid var(--border-color);
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 13px;
-          transition: all 0.2s;
-        }
-
-        .preset-buttons button:hover,
-        .orientation-buttons button:hover {
-          background: var(--bg-hover);
-          border-color: var(--primary);
-        }
-
-        .preset-buttons button.active,
-        .orientation-buttons button.active {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-        }
-
-        .orientation-buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-        }
-
-        .margin-inputs {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-        }
-
-        .margin-inputs input {
-          padding: 8px 12px;
-          border: 1px solid var(--border-color);
-          border-radius: 6px;
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          font-size: 13px;
-        }
-      `}</style>
         </div>
     )
 }

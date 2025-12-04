@@ -1,4 +1,5 @@
 import { useDesignStore } from '../../../stores/designStore'
+import './TypographyPanel.css'
 
 const FONT_LIBRARY = {
     serif: [
@@ -122,52 +123,6 @@ export default function TypographyPanel() {
                     Este é um exemplo de texto no corpo do documento. A tipografia escolhida deve ser legível e harmoniosa.
                 </div>
             </div>
-
-            <style jsx>{`
-        .typography-controls {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-
-        .typography-controls label {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .typography-controls label span {
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-
-        .typography-controls select {
-          padding: 8px 12px;
-          border: 1px solid var(--border-color);
-          border-radius: 6px;
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          font-size: 14px;
-          cursor: pointer;
-        }
-
-        .font-preview {
-          padding: 16px;
-          background: var(--bg-primary);
-          border: 1px solid var(--border-color);
-          border-radius: 8px;
-        }
-
-        .font-preview h4 {
-          margin: 0 0 12px 0;
-          font-size: 12px;
-          text-transform: uppercase;
-          color: var(--text-secondary);
-          letter-spacing: 0.5px;
-        }
-      `}</style>
         </div>
     )
 }
