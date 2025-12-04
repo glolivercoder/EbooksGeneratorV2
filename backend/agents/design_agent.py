@@ -45,6 +45,14 @@ class DesignAgent:
     
     def __init__(self):
         self.system_prompt = DESIGNER_SYSTEM_PROMPT
+        self.style_db = self._load_style_database()
+        
+    def _load_style_database(self) -> Dict:
+        try:
+            with open("data/style_database.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
     
     async def analyze_content(self, content: str) -> Dict[str, Any]:
         """
@@ -65,8 +73,17 @@ class DesignAgent:
         """
         from services.llm_client import llm_client, TaskType
         
+        # Injetar conhecimento da base de dados se disponível
+        style_context = ""
+        if self.style_db:
+            style_context = "\nREFERÊNCIAS DE ESTILO (Mental Graph):\n"
+            for theme, data in self.style_db.get("themes", {}).items():
+                style_context += f"- {theme.upper()}: {', '.join(data.get('keywords', []))}\n"
+                
         prompt = f"""
 Analise o seguinte conteúdo de ebook e sugira um design visual apropriado.
+
+{style_context}
 
 CONTEÚDO:
 {content[:2000]}  # Limita a 2000 caracteres para não sobrecarregar

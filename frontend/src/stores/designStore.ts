@@ -43,10 +43,21 @@ export interface DesignConfig {
     colors: ColorScheme
 }
 
+
+export interface DesignTemplate {
+    id: string
+    name: string
+    description?: string
+    colors: ColorScheme
+    typography: TypographyConfig
+    createdAt: string
+}
+
 interface DesignState {
     config: DesignConfig
     selectedTemplate: string | null
     canvasObjects: any[]
+    savedTemplates: DesignTemplate[]
 
     // Actions
     updatePageSize: (pageSize: Partial<PageSize>) => void
@@ -58,6 +69,9 @@ interface DesignState {
     removeCanvasObject: (id: string) => void
     clearCanvas: () => void
     resetConfig: () => void
+    saveCurrentAsTemplate: (name: string, description?: string) => DesignTemplate
+    loadTemplate: (templateId: string) => void
+    deleteTemplate: (templateId: string) => void
 }
 
 const DEFAULT_CONFIG: DesignConfig = {
@@ -93,10 +107,11 @@ const DEFAULT_CONFIG: DesignConfig = {
     }
 }
 
-export const useDesignStore = create<DesignState>((set) => ({
+export const useDesignStore = create<DesignState>((set, get) => ({
     config: DEFAULT_CONFIG,
     selectedTemplate: null,
     canvasObjects: [],
+    savedTemplates: [],
 
     updatePageSize: (pageSize) => set((state) => ({
         config: {
@@ -142,5 +157,41 @@ export const useDesignStore = create<DesignState>((set) => ({
         config: DEFAULT_CONFIG,
         selectedTemplate: null,
         canvasObjects: []
-    })
+    }),
+
+    saveCurrentAsTemplate: (name, description) => {
+        const state = get()
+        const newTemplate: DesignTemplate = {
+            id: `template-${Date.now()}`,
+            name,
+            description,
+            colors: { ...state.config.colors },
+            typography: { ...state.config.typography },
+            createdAt: new Date().toISOString()
+        }
+        set((state) => ({
+            savedTemplates: [...state.savedTemplates, newTemplate]
+        }))
+        return newTemplate
+    },
+
+    loadTemplate: (templateId) => {
+        const state = get()
+        const template = state.savedTemplates.find(t => t.id === templateId)
+        if (template) {
+            set({
+                config: {
+                    ...state.config,
+                    colors: template.colors,
+                    typography: template.typography
+                },
+                selectedTemplate: templateId
+            })
+        }
+    },
+
+    deleteTemplate: (templateId) => set((state) => ({
+        savedTemplates: state.savedTemplates.filter(t => t.id !== templateId),
+        selectedTemplate: state.selectedTemplate === templateId ? null : state.selectedTemplate
+    }))
 }))

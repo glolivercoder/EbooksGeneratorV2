@@ -31,6 +31,76 @@ const COLOR_SCHEMES = [
         surface: '#ffffff',
         textPrimary: '#2c2416',
         textSecondary: '#5a4a3a'
+    },
+    {
+        name: 'Ocean Breeze',
+        primary: '#1e88e5',
+        secondary: '#00acc1',
+        accent: '#26c6da',
+        background: '#e3f2fd',
+        surface: '#ffffff',
+        textPrimary: '#01579b',
+        textSecondary: '#0277bd'
+    },
+    {
+        name: 'Sunset Vibes',
+        primary: '#ff6f61',
+        secondary: '#ff9f68',
+        accent: '#ffcc00',
+        background: '#fff5ec',
+        surface: '#ffffff',
+        textPrimary: '#5d3a1a',
+        textSecondary: '#8b5a3c'
+    },
+    {
+        name: 'Forest Green',
+        primary: '#2e7d32',
+        secondary: '#66bb6a',
+        accent: '#a5d6a7',
+        background: '#f1f8e9',
+        surface: '#ffffff',
+        textPrimary: '#1b5e20',
+        textSecondary: '#388e3c'
+    },
+    {
+        name: 'Dark Mode Pro',
+        primary: '#bb86fc',
+        secondary: '#03dac6',
+        accent: '#cf6679',
+        background: '#121212',
+        surface: '#1e1e1e',
+        textPrimary: '#ffffff',
+        textSecondary: '#b0b0b0'
+    },
+    {
+        name: 'Cherry Blossom',
+        primary: '#ec407a',
+        secondary: '#f48fb1',
+        accent: '#fce4ec',
+        background: '#fff0f5',
+        surface: '#ffffff',
+        textPrimary: '#880e4f',
+        textSecondary: '#c2185b'
+    },
+    {
+        name: 'Corporate Blue',
+        primary: '#1976d2',
+        secondary: '#2196f3',
+        accent: '#64b5f6',
+        background: '#fafafa',
+        surface: '#ffffff',
+        textPrimary: '#212121',
+        textSecondary: '#616161'
+    },
+    {
+        name: 'Retro Vintage',
+        primary: '#d84315',
+        secondary: '#ff5722',
+        accent: '#ffab91',
+        background: '#fff3e0',
+        surface: '#ffffff',
+        textPrimary: '#3e2723',
+        textSecondary: '#6d4c41'
     }
 ]
 

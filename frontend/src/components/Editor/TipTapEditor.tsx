@@ -35,6 +35,8 @@ import './TipTapTableStyles.css'
 import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles, Wand2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useBookStore } from '../../stores/bookStore'
+import { GOOGLE_FONTS } from '../../services/designService'
+import { Type } from 'lucide-react'
 
 interface TipTapEditorProps {
   content?: string
@@ -60,7 +62,9 @@ export default function TipTapEditor({
   const [isPixabayModalOpen, setIsPixabayModalOpen] = useState(false)
   const [isFreepikModalOpen, setIsFreepikModalOpen] = useState(false)
   const [showMermaidDropdown, setShowMermaidDropdown] = useState(false)
+
   const [showExportDropdown, setShowExportDropdown] = useState(false)
+  const [showFontDropdown, setShowFontDropdown] = useState(false)
   const [showMermaidAIModal, setShowMermaidAIModal] = useState(false)
   const [diagramDescription, setDiagramDescription] = useState('')
   const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false)
@@ -186,6 +190,11 @@ export default function TipTapEditor({
       Mathematics,
       Image,
       ResizeImage,
+      Image,
+      ResizeImage,
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
       Table.configure({
         resizable: true,
       }),
@@ -559,6 +568,92 @@ export default function TipTapEditor({
         </div>
 
         <div className="menu-group">
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowFontDropdown(!showFontDropdown)}
+              className={`menu-btn ${editor.isActive('textStyle') ? 'is-active' : ''}`}
+              title="Fonte"
+            >
+              <Type size={16} />
+            </button>
+            {showFontDropdown && (
+              <div className="font-dropdown" style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '4px',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                minWidth: '200px',
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                <div className="font-category-label">Serif</div>
+                {GOOGLE_FONTS.serif.map(font => (
+                  <button
+                    key={font}
+                    onClick={() => {
+                      editor.chain().focus().setFontFamily(font).run()
+                      setShowFontDropdown(false)
+                    }}
+                    style={{ fontFamily: font }}
+                    className={`font-option ${editor.isActive('textStyle', { fontFamily: font }) ? 'active' : ''}`}
+                  >
+                    {font}
+                  </button>
+                ))}
+
+                <div className="font-category-label">Sans-Serif</div>
+                {GOOGLE_FONTS.sans.map(font => (
+                  <button
+                    key={font}
+                    onClick={() => {
+                      editor.chain().focus().setFontFamily(font).run()
+                      setShowFontDropdown(false)
+                    }}
+                    style={{ fontFamily: font }}
+                    className={`font-option ${editor.isActive('textStyle', { fontFamily: font }) ? 'active' : ''}`}
+                  >
+                    {font}
+                  </button>
+                ))}
+
+                <div className="font-category-label">Display</div>
+                {GOOGLE_FONTS.display.map(font => (
+                  <button
+                    key={font}
+                    onClick={() => {
+                      editor.chain().focus().setFontFamily(font).run()
+                      setShowFontDropdown(false)
+                    }}
+                    style={{ fontFamily: font }}
+                    className={`font-option ${editor.isActive('textStyle', { fontFamily: font }) ? 'active' : ''}`}
+                  >
+                    {font}
+                  </button>
+                ))}
+
+                <div className="font-category-label">Script</div>
+                {GOOGLE_FONTS.script.map(font => (
+                  <button
+                    key={font}
+                    onClick={() => {
+                      editor.chain().focus().setFontFamily(font).run()
+                      setShowFontDropdown(false)
+                    }}
+                    style={{ fontFamily: font }}
+                    className={`font-option ${editor.isActive('textStyle', { fontFamily: font }) ? 'active' : ''}`}
+                  >
+                    {font}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`menu-btn ${editor.isActive('bold') ? 'active' : ''}`}

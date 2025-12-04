@@ -14,9 +14,11 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useTemplateStore } from '../../stores/templateStore'
-import { Sparkles, Trash2, CheckCircle } from 'lucide-react'
+import { Sparkles, Trash2, CheckCircle, LayoutTemplate } from 'lucide-react'
 import toast from 'react-hot-toast'
 import './TemplateFlow.css'
+import TemplateReferencesModal from './TemplateReferencesModal'
+import { TemplateReference } from '../../services/designService'
 
 // Import custom nodes
 import PageNode from './nodes/PageNode'
@@ -40,6 +42,7 @@ export default function TemplateFlow() {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
     const [isGenerating, setIsGenerating] = useState(false)
+    const [isReferencesOpen, setIsReferencesOpen] = useState(false)
 
     const onConnect = useCallback((params: any) => {
         setEdges((eds) => addEdge(params, eds))
@@ -117,6 +120,12 @@ export default function TemplateFlow() {
         }
     }
 
+    const handleSelectReference = (reference: TemplateReference) => {
+        toast.success(`Referência "${reference.title}" selecionada!`)
+        // Aqui futuramente implementaremos a lógica para carregar o layout da referência
+        setIsReferencesOpen(false)
+    }
+
     return (
         <div className="template-flow-wrapper">
             {/* Preview Panel */}
@@ -174,6 +183,9 @@ export default function TemplateFlow() {
                             <button onClick={addChapterNode} title="Adicionar Capítulo">
                                 📚 Capítulo
                             </button>
+                            <button onClick={() => setIsReferencesOpen(true)} title="Ver Referências">
+                                <LayoutTemplate size={16} /> Referências
+                            </button>
                         </div>
 
                         <div className="toolbar-group">
@@ -195,6 +207,12 @@ export default function TemplateFlow() {
                     </Panel>
                 </ReactFlow>
             </div>
+
+            <TemplateReferencesModal
+                isOpen={isReferencesOpen}
+                onClose={() => setIsReferencesOpen(false)}
+                onSelect={handleSelectReference}
+            />
         </div>
     )
 }

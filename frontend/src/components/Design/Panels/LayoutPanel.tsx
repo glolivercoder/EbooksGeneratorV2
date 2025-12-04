@@ -1,4 +1,5 @@
 import { useDesignStore } from '../../../stores/designStore'
+import { Trash2, Download } from 'lucide-react'
 import './LayoutPanel.css'
 
 const PAGE_PRESETS = [
@@ -15,10 +16,72 @@ const MARGIN_PRESETS = [
 ]
 
 export default function LayoutPanel() {
-    const { config, updatePageSize, updateMargins } = useDesignStore()
+    const { config, updatePageSize, updateMargins, savedTemplates, loadTemplate, deleteTemplate, selectedTemplate } = useDesignStore()
 
     return (
         <div className="panel-section">
+            <h3>📑 Templates Salvos</h3>
+
+            {savedTemplates.length === 0 ? (
+                <div className="empty-state">
+                    <p>Nenhum template salvo ainda.</p>
+                    <span>Use "Gerar com IA" para criar seu primeiro template!</span>
+                </div>
+            ) : (
+                <div className="saved-templates-list">
+                    {savedTemplates.map(template => (
+                        <div
+                            key={template.id}
+                            className={`template-card ${selectedTemplate === template.id ? 'active' : ''}`}
+                        >
+                            <div className="template-preview">
+                                <div className="color-dots">
+                                    <span style={{ backgroundColor: template.colors.primary }} />
+                                    <span style={{ backgroundColor: template.colors.secondary }} />
+                                    <span style={{ backgroundColor: template.colors.accent }} />
+                                </div>
+                            </div>
+                            <div className="template-info">
+                                <h4>{template.name}</h4>
+                                {template.description && (
+                                    <p className="template-description">{template.description}</p>
+                                )}
+                                <span className="template-date">
+                                    {new Date(template.createdAt).toLocaleDateString('pt-BR', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+                            <div className="template-actions">
+                                <button
+                                    onClick={() => loadTemplate(template.id)}
+                                    className="btn-load"
+                                    title="Carregar Template"
+                                >
+                                    <Download size={16} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (confirm(`Deletar template "${template.name}"?`)) {
+                                            deleteTemplate(template.id)
+                                        }
+                                    }}
+                                    className="btn-delete"
+                                    title="Deletar Template"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <hr className="panel-divider" />
+
             <h3>📐 Layout</h3>
 
             <div className="layout-section">

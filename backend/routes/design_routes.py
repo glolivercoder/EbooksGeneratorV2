@@ -238,3 +238,19 @@ async def get_fonts():
             ]
         }
     }
+
+
+@router.get("/templates")
+async def get_templates(category: Optional[str] = None):
+    """
+    Retorna lista de templates disponíveis
+    
+    Args:
+        category: Filtra por categoria (technical, magazines, childrens, fashion, entrepreneurship)
+        
+    Returns:
+        Lista de templates
+    """
+    from templates.templates import get_templates_by_category
+    return {"templates": get_templates_by_category(category)}
+

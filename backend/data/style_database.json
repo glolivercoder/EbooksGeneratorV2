@@ -1,0 +1,339 @@
+{
+    "themes": {
+        "technical": {
+            "description": "Livros Técnicos e Didáticos",
+            "keywords": [
+                "clean",
+                "structured",
+                "sober",
+                "educational",
+                "modern"
+            ],
+            "covers": {
+                "elements": [
+                    "abstract_shapes",
+                    "subject_icons",
+                    "grid_layout",
+                    "bold_titles"
+                ],
+                "colors": [
+                    {
+                        "name": "Tech Blue",
+                        "palette": [
+                            "#0056b3",
+                            "#e6f0ff",
+                            "#333333",
+                            "#ffffff"
+                        ]
+                    },
+                    {
+                        "name": "Code Dark",
+                        "palette": [
+                            "#1e1e1e",
+                            "#007acc",
+                            "#d4d4d4",
+                            "#252526"
+                        ]
+                    },
+                    {
+                        "name": "Clean Grey",
+                        "palette": [
+                            "#f8f9fa",
+                            "#343a40",
+                            "#6c757d",
+                            "#adb5bd"
+                        ]
+                    }
+                ],
+                "typography": {
+                    "heading": [
+                        "Inter",
+                        "Roboto",
+                        "Montserrat"
+                    ],
+                    "body": [
+                        "Open Sans",
+                        "Lato"
+                    ]
+                }
+            },
+            "internal": {
+                "layout": "single_column_with_sidebar",
+                "features": [
+                    "code_blocks",
+                    "callout_boxes",
+                    "clear_hierarchy",
+                    "breadcrumbs"
+                ]
+            }
+        },
+        "magazines": {
+            "description": "Revistas e Editoriais",
+            "keywords": [
+                "bold",
+                "creative",
+                "grid_based",
+                "visual",
+                "dynamic"
+            ],
+            "covers": {
+                "elements": [
+                    "full_bleed_image",
+                    "overlay_text",
+                    "dynamic_typography",
+                    "magazine_masthead"
+                ],
+                "colors": [
+                    {
+                        "name": "Vibrant Pop",
+                        "palette": [
+                            "#ff0055",
+                            "#000000",
+                            "#ffffff",
+                            "#ffff00"
+                        ]
+                    },
+                    {
+                        "name": "Editorial Chic",
+                        "palette": [
+                            "#1a1a1a",
+                            "#d4af37",
+                            "#f5f5f5",
+                            "#333333"
+                        ]
+                    },
+                    {
+                        "name": "Modern Art",
+                        "palette": [
+                            "#2c3e50",
+                            "#e74c3c",
+                            "#ecf0f1",
+                            "#3498db"
+                        ]
+                    }
+                ],
+                "typography": {
+                    "heading": [
+                        "Playfair Display",
+                        "Bodoni Moda",
+                        "Didot"
+                    ],
+                    "body": [
+                        "Merriweather",
+                        "Lora"
+                    ]
+                }
+            },
+            "internal": {
+                "layout": "multi_column",
+                "features": [
+                    "drop_caps",
+                    "pull_quotes",
+                    "image_grids",
+                    "caption_styles"
+                ]
+            }
+        },
+        "childrens": {
+            "description": "Livros Infantis",
+            "keywords": [
+                "playful",
+                "colorful",
+                "rounded",
+                "illustrated",
+                "fun"
+            ],
+            "covers": {
+                "elements": [
+                    "large_illustrations",
+                    "handwritten_fonts",
+                    "soft_shapes",
+                    "characters"
+                ],
+                "colors": [
+                    {
+                        "name": "Candy Brights",
+                        "palette": [
+                            "#ff6b6b",
+                            "#4ecdc4",
+                            "#ffe66d",
+                            "#ffffff"
+                        ]
+                    },
+                    {
+                        "name": "Pastel Dream",
+                        "palette": [
+                            "#ffb7b2",
+                            "#ffdac1",
+                            "#e2f0cb",
+                            "#b5ead7"
+                        ]
+                    },
+                    {
+                        "name": "Primary Fun",
+                        "palette": [
+                            "#ff0000",
+                            "#00ff00",
+                            "#0000ff",
+                            "#ffff00"
+                        ]
+                    }
+                ],
+                "typography": {
+                    "heading": [
+                        "Fredoka One",
+                        "Comic Neue",
+                        "Baloo 2"
+                    ],
+                    "body": [
+                        "Quicksand",
+                        "Nunito"
+                    ]
+                }
+            },
+            "internal": {
+                "layout": "image_heavy",
+                "features": [
+                    "large_text",
+                    "speech_bubbles",
+                    "full_page_illustrations",
+                    "interactive_elements"
+                ]
+            }
+        },
+        "fashion": {
+            "description": "Blog de Moda Feminina",
+            "keywords": [
+                "elegant",
+                "minimalist",
+                "stylish",
+                "high_contrast",
+                "luxury"
+            ],
+            "covers": {
+                "elements": [
+                    "minimalist_photo",
+                    "serif_typography",
+                    "pastel_accents",
+                    "whitespace"
+                ],
+                "colors": [
+                    {
+                        "name": "Rose Gold",
+                        "palette": [
+                            "#b76e79",
+                            "#f4c2c2",
+                            "#ffffff",
+                            "#333333"
+                        ]
+                    },
+                    {
+                        "name": "Monochrome Chic",
+                        "palette": [
+                            "#000000",
+                            "#ffffff",
+                            "#808080",
+                            "#c0c0c0"
+                        ]
+                    },
+                    {
+                        "name": "Beige Aesthetic",
+                        "palette": [
+                            "#f5f5dc",
+                            "#d2b48c",
+                            "#8b4513",
+                            "#fff8dc"
+                        ]
+                    }
+                ],
+                "typography": {
+                    "heading": [
+                        "Cormorant Garamond",
+                        "Cinzel",
+                        "Prata"
+                    ],
+                    "body": [
+                        "Montserrat",
+                        "Raleway"
+                    ]
+                }
+            },
+            "internal": {
+                "layout": "masonry_grid",
+                "features": [
+                    "large_photos",
+                    "minimal_text",
+                    "stylish_dividers",
+                    "social_icons"
+                ]
+            }
+        },
+        "entrepreneurship": {
+            "description": "Empreendedorismo e Negócios",
+            "keywords": [
+                "professional",
+                "bold",
+                "impactful",
+                "trustworthy",
+                "dynamic"
+            ],
+            "covers": {
+                "elements": [
+                    "author_portrait",
+                    "bold_sans_serif",
+                    "contrast_colors",
+                    "geometric_accents"
+                ],
+                "colors": [
+                    {
+                        "name": "Success Blue",
+                        "palette": [
+                            "#0044cc",
+                            "#ffffff",
+                            "#000000",
+                            "#ffcc00"
+                        ]
+                    },
+                    {
+                        "name": "Power Red",
+                        "palette": [
+                            "#cc0000",
+                            "#ffffff",
+                            "#1a1a1a",
+                            "#808080"
+                        ]
+                    },
+                    {
+                        "name": "Growth Green",
+                        "palette": [
+                            "#006633",
+                            "#ffffff",
+                            "#333333",
+                            "#99cc00"
+                        ]
+                    }
+                ],
+                "typography": {
+                    "heading": [
+                        "Oswald",
+                        "Anton",
+                        "Bebas Neue"
+                    ],
+                    "body": [
+                        "Roboto",
+                        "Open Sans"
+                    ]
+                }
+            },
+            "internal": {
+                "layout": "clean_readability",
+                "features": [
+                    "highlight_boxes",
+                    "bullet_points",
+                    "charts",
+                    "pull_quotes"
+                ]
+            }
+        }
+    }
+}

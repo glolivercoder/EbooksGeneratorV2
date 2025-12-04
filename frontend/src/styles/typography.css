@@ -1,0 +1,69 @@
+/* Google Fonts Variables */
+:root {
+    /* Serif */
+    --font-merriweather: 'Merriweather', serif;
+    --font-lora: 'Lora', serif;
+    --font-eb-garamond: 'EB Garamond', serif;
+    --font-crimson-text: 'Crimson Text', serif;
+    --font-libre-baskerville: 'Libre Baskerville', serif;
+    --font-pt-serif: 'PT Serif', serif;
+    --font-spectral: 'Spectral', serif;
+    --font-playfair: 'Playfair Display', serif;
+    --font-bodoni: 'Bodoni Moda', serif;
+    --font-cormorant: 'Cormorant Garamond', serif;
+
+    /* Sans-Serif */
+    --font-roboto: 'Roboto', sans-serif;
+    --font-open-sans: 'Open Sans', sans-serif;
+    --font-lato: 'Lato', sans-serif;
+    --font-montserrat: 'Montserrat', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
+    --font-inter: 'Inter', sans-serif;
+    --font-raleway: 'Raleway', sans-serif;
+    --font-nunito: 'Nunito', sans-serif;
+    --font-ubuntu: 'Ubuntu', sans-serif;
+
+    /* Display */
+    --font-bebas: 'Bebas Neue', sans-serif;
+    --font-oswald: 'Oswald', sans-serif;
+    --font-cinzel: 'Cinzel', serif;
+    --font-abril: 'Abril Fatface', cursive;
+    --font-anton: 'Anton', sans-serif;
+
+    /* Script */
+    --font-pacifico: 'Pacifico', cursive;
+    --font-great-vibes: 'Great Vibes', cursive;
+}
+
+/* Utility Classes */
+.font-merriweather {
+    font-family: var(--font-merriweather);
+}
+
+.font-lora {
+    font-family: var(--font-lora);
+}
+
+.font-playfair {
+    font-family: var(--font-playfair);
+}
+
+.font-roboto {
+    font-family: var(--font-roboto);
+}
+
+.font-inter {
+    font-family: var(--font-inter);
+}
+
+.font-montserrat {
+    font-family: var(--font-montserrat);
+}
+
+.font-bebas {
+    font-family: var(--font-bebas);
+}
+
+.font-cinzel {
+    font-family: var(--font-cinzel);
+}

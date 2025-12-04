@@ -21,7 +21,7 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
     const [selectedModel, setSelectedModel] = useState<ModelInfo | undefined>()
     const [customPrompt, setCustomPrompt] = useState('')
     const [referenceImage, setReferenceImage] = useState<string | null>(null)
-    const { updateColors, updateTypography } = useDesignStore()
+    const { updateColors, updateTypography, saveCurrentAsTemplate } = useDesignStore()
 
     const handleExportToEditor = (html: string) => {
         if (onApplyToEditor) {
@@ -55,7 +55,11 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
                 })
             }
 
-            alert(`✨ Design gerado com IA!\n\nModelo: ${selectedModel?.name || 'Padrão'}\nEstilo: ${result.suggested_style}\nTom: ${result.tone}\nMood: ${result.mood}`)
+            // Salvar como template
+            const templateName = `IA - ${result.suggested_style} (${new Date().toLocaleTimeString()})`
+            const savedTemplate = saveCurrentAsTemplate(templateName, `Gerado por IA com base em: ${content.substring(0, 50)}...`)
+
+            alert(`✨ Design gerado e salvo com IA!\n\nTemplate: ${savedTemplate.name}\nModelo: ${selectedModel?.name || 'Padrão'}\nEstilo: ${result.suggested_style}\nTom: ${result.tone}\nMood: ${result.mood}`)
         } catch (error) {
             console.error('Erro ao gerar design:', error)
             alert('Erro ao gerar design com IA. Verifique se o backend está rodando.')
