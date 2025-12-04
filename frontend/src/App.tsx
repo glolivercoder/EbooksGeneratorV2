@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Moon, Sun, Settings, Book, FileText, Cpu, Clock, Edit3, LayoutTemplate } from 'lucide-react'
+import { Moon, Sun, Settings, Book, FileText, Cpu, Clock, Edit3, LayoutTemplate, Palette } from 'lucide-react'
 import { useTheme } from './stores/themeStore'
 import { Toaster } from 'react-hot-toast'
 import SettingsPanel from './components/Settings/SettingsPanel'
@@ -8,12 +8,13 @@ import EditorCentral from './components/BookWizard/EditorCentral'
 import TemplateFlow from './components/Templates/TemplateFlow'
 import LLMSelector from './components/LLMSelector/LLMSelector'
 import HistoryModal from './components/History/HistoryModal'
+import DesignTab from './components/Design/DesignTab'
 import './App.css'
 import './styles/global.css'
 
 function App() {
     const { theme, toggleTheme } = useTheme()
-    const [activeTab, setActiveTab] = useState<'generator' | 'editor' | 'templates' | 'settings'>('generator')
+    const [activeTab, setActiveTab] = useState<'generator' | 'editor' | 'design' | 'templates' | 'settings'>('generator')
     const [isLLMSelectorOpen, setIsLLMSelectorOpen] = useState(false)
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [editorContent, setEditorContent] = useState('')
@@ -60,6 +61,13 @@ function App() {
                         >
                             <Edit3 size={18} />
                             <span>Editor</span>
+                        </button>
+                        <button
+                            className={`nav-tab ${activeTab === 'design' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('design')}
+                        >
+                            <Palette size={18} />
+                            <span>Design</span>
                         </button>
                         <button
                             className={`nav-tab ${activeTab === 'templates' ? 'active' : ''}`}
@@ -118,6 +126,16 @@ function App() {
                         <EditorCentral
                             content={editorContent}
                             onContentChange={setEditorContent}
+                        />
+                    </div>
+                )}
+                {activeTab === 'design' && (
+                    <div className="design-container" style={{ height: '100%' }}>
+                        <DesignTab
+                            onApplyToEditor={(html) => {
+                                setEditorContent(html)
+                                setActiveTab('editor')
+                            }}
                         />
                     </div>
                 )}

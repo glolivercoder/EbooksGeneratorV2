@@ -1,3 +1,5 @@
+// ATTENTION: jspdf is a new dependency. Please run `npm install jspdf` in the frontend directory.
+
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -11,6 +13,9 @@ import CharacterCount from '@tiptap/extension-character-count'
 import FontFamily from '@tiptap/extension-font-family'
 import Mathematics from '@tiptap/extension-mathematics'
 import Image from '@tiptap/extension-image'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import mermaid from 'mermaid'
 
 import ResizeImage from 'tiptap-extension-resize-image'
 import { Table } from '@tiptap/extension-table'
@@ -25,17 +30,17 @@ import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
 import { MermaidExtension } from './extensions/MermaidExtension'
+import './TipTapTableStyles.css'
 
 import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles, Wand2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useBookStore } from '../../stores/bookStore'
 
 interface TipTapEditorProps {
   content?: string
   onContentChange?: (content: string) => void
   onAutoSave?: (content: string) => void
-  onSave?: () => void
   onOpen?: () => void
-  onExport?: (format?: string) => void
   placeholder?: string
   editable?: boolean
   autoSaveDelay?: number
@@ -45,9 +50,7 @@ export default function TipTapEditor({
   content = '',
   onContentChange,
   onAutoSave,
-  onSave,
   onOpen,
-  onExport,
   placeholder = 'Comece a escrever seu livro...',
   editable = true,
   autoSaveDelay = 2000
@@ -62,8 +65,10 @@ export default function TipTapEditor({
   const [diagramDescription, setDiagramDescription] = useState('')
   const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const editorRef = useRef<HTMLDivElement>(null)
   const autoSaveTimerRef = useRef<number | null>(null)
   const lastSavedContentRef = useRef<string>(content)
+  const { currentBook } = useBookStore()
 
   // Handle local image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -306,6 +311,114 @@ export default function TipTapEditor({
   const MenuBar = () => {
     if (!editable) return null
 
+    const handleSaveToDisk = () => {
+      const htmlContent = editor.getHTML();
+      if (!htmlContent) {
+        alert('Nenhum conteúdo para salvar')
+        return
+      }
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${currentBook?.title || 'documento'}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      console.log('✓ Arquivo HTML salvo no dispositivo')
+    }
+
+    const handleExport = async (format: string = 'pdf') => {
+      const htmlContent = editor.getHTML();
+      if (!htmlContent) {
+        alert('Nenhum conteúdo para exportar')
+        return
+      }
+
+      const fileName = currentBook?.title || 'documento'
+
+      switch (format) {
+        case 'pdf':
+          if (editorRef.current) {
+            const contentElement = editorRef.current.querySelector('.editor-content') as HTMLElement;
+            if (!contentElement) {
+              toast.error('Erro ao encontrar conteúdo para exportar');
+              return;
+            }
+
+            toast.loading('Exportando para PDF...', { id: 'pdf-export' });
+            try {
+              const canvas = await html2canvas(contentElement, {
+                useCORS: true,
+                allowTaint: true,
+                onclone: (doc) => {
+                  const mermaidElements = doc.querySelectorAll('.mermaid');
+                  const promises = Array.from(mermaidElements).map((el, i) => {
+                    const id = `mermaid-temp-render-${i}`;
+                    const code = el.querySelector('code')?.innerText || '';
+                    if (code) {
+                      return mermaid.render(id, code);
+                    }
+                    return Promise.resolve({ svg: '' });
+                  });
+
+                  Promise.all(promises).then(results => {
+                    results.forEach((result, i) => {
+                      const el = doc.querySelector(`#mermaid-temp-render-${i}`)?.parentElement;
+                      if (el) {
+                        const svgContainer = doc.createElement('div');
+                        svgContainer.innerHTML = result.svg;
+                        el.replaceWith(svgContainer);
+                      }
+                    });
+                  });
+                }
+              });
+
+              const imgData = canvas.toDataURL('image/png');
+              const pdf = new jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: 'a4',
+              });
+
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const canvasWidth = canvas.width;
+              const canvasHeight = canvas.height;
+              const ratio = canvasHeight / canvasWidth;
+              const pdfHeight = ratio * pdfWidth;
+
+              pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+              pdf.save(`${fileName}.pdf`);
+              toast.success('PDF exportado com sucesso!', { id: 'pdf-export' });
+            } catch (error) {
+              console.error("Error exporting PDF:", error);
+              toast.error('Falha ao exportar PDF.', { id: 'pdf-export' });
+            }
+          }
+          break;
+        case 'rtf':
+          const rtfContent = `{\rtf1\ansi\deff0 ${htmlContent.replace(/<[^>]*>/g, '')}}`
+          const rtfBlob = new Blob([rtfContent], { type: 'application/rtf' })
+          const rtfUrl = URL.createObjectURL(rtfBlob)
+          const rtfLink = document.createElement('a')
+          rtfLink.href = rtfUrl
+          rtfLink.download = `${fileName}.rtf`
+          rtfLink.click()
+          URL.revokeObjectURL(rtfUrl)
+          break
+        case 'docx':
+        case 'odt':
+          alert('Exportação DOCX/ODT: Use "Salvar como HTML" e abra no Word/LibreOffice para converter')
+          handleSaveToDisk()
+          break
+        default:
+          alert('Formato inválido')
+      }
+    }
+
     return (
       <div className="menu-bar">
         {/* File Operations */}
@@ -319,110 +432,106 @@ export default function TipTapEditor({
               <FolderOpen size={16} />
             </button>
           )}
-          {onSave && (
+          <button
+            onClick={handleSaveToDisk}
+            className="menu-btn"
+            title="Salvar arquivo"
+          >
+            <Save size={16} />
+          </button>
+          <div style={{ position: 'relative' }}>
             <button
-              onClick={onSave}
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
               className="menu-btn"
-              title="Salvar arquivo"
+              title="Exportar arquivo"
             >
-              <Save size={16} />
+              <FileDown size={16} />
             </button>
-          )}
-          {onExport && (
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowExportDropdown(!showExportDropdown)}
-                className="menu-btn"
-                title="Exportar arquivo"
-              >
-                <FileDown size={16} />
-              </button>
-              {showExportDropdown && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: '4px',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 1000,
-                  minWidth: '160px',
-                  overflow: 'hidden'
-                }}>
-                  <button
-                    onClick={() => { onExport('pdf'); setShowExportDropdown(false) }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: 'none',
-                      background: 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      color: 'var(--text-primary)',
-                      fontSize: '14px'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    📄 PDF
-                  </button>
-                  <button
-                    onClick={() => { onExport('rtf'); setShowExportDropdown(false) }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: 'none',
-                      background: 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      color: 'var(--text-primary)',
-                      fontSize: '14px'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    📝 Rich Text (RTF)
-                  </button>
-                  <button
-                    onClick={() => { onExport('docx'); setShowExportDropdown(false) }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: 'none',
-                      background: 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      color: 'var(--text-primary)',
-                      fontSize: '14px'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    📘 Word (DOCX)
-                  </button>
-                  <button
-                    onClick={() => { onExport('odt'); setShowExportDropdown(false) }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: 'none',
-                      background: 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      color: 'var(--text-primary)',
-                      fontSize: '14px'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    📗 LibreOffice (ODT)
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+            {showExportDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '4px',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                minWidth: '160px',
+                overflow: 'hidden'
+              }}>
+                <button
+                  onClick={() => { handleExport('pdf'); setShowExportDropdown(false) }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  📄 PDF
+                </button>
+                <button
+                  onClick={() => { handleExport('rtf'); setShowExportDropdown(false) }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  📝 Rich Text (RTF)
+                </button>
+                <button
+                  onClick={() => { handleExport('docx'); setShowExportDropdown(false) }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  📘 Word (DOCX)
+                </button>
+                <button
+                  onClick={() => { handleExport('odt'); setShowExportDropdown(false) }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  📗 LibreOffice (ODT)
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="menu-group">
@@ -799,7 +908,7 @@ export default function TipTapEditor({
   }
 
   return (
-    <div className="tiptap-editor">
+    <div className="tiptap-editor" ref={editorRef}>
       <MenuBar />
       <div className="editor-stats">
         <div className="stats-left">

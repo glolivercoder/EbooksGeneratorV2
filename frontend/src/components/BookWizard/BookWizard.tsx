@@ -70,30 +70,36 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
         setStep(2)
     }
 
-    const handleLoadOutline = (historyOutline: any) => {
+    const handleLoadBook = (bookData: any) => {
         // Converter formato do store para o formato do app
-        const bookData = {
-            id: historyOutline.id,
-            title: historyOutline.title,
-            description: historyOutline.description,
-            optimized_prompt: historyOutline.optimized_prompt || historyOutline.refined_prompt,
-            total_chapters: historyOutline.total_chapters,
-            chapters: historyOutline.chapters,
-            created_at: historyOutline.created_at,
+        const newBookData = {
+            id: bookData.id,
+            title: bookData.title,
+            description: bookData.description,
+            optimized_prompt: bookData.optimized_prompt || bookData.refined_prompt,
+            total_chapters: bookData.total_chapters,
+            chapters: bookData.chapters,
+            created_at: bookData.created_at,
             last_modified: new Date().toISOString(),
-            status: 'in_progress' as const
+            status: 'in_progress' as const,
+            content: bookData.content
         }
 
-        setCurrentBook(bookData)
+        setCurrentBook(newBookData)
         setOutline({
-            book_title: historyOutline.title,
-            description: historyOutline.description,
-            refined_prompt: historyOutline.optimized_prompt || historyOutline.description,
-            total_chapters: historyOutline.total_chapters,
-            chapters: historyOutline.chapters
+            book_title: newBookData.title,
+            description: newBookData.description,
+            refined_prompt: newBookData.optimized_prompt || newBookData.description,
+            total_chapters: newBookData.total_chapters,
+            chapters: newBookData.chapters
         })
+
+        // Preferir conteúdo salvo completo, senão concatenar capítulos
+        const allContent = newBookData.content || newBookData.chapters?.map((chapter: any) => chapter.content || '').join('<hr>') || ''
+        setEditorContent(allContent)
+
         setStep(2)
-        console.log('Outline carregado:', bookData)
+        console.log('Livro carregado:', newBookData)
     }
 
     const handleReset = () => {
@@ -189,6 +195,7 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
 
     const handleChapterSelect = (chapter: any) => {
         setSelectedChapter(chapter)
+        setEditorContent(chapter.content || '')
     }
 
     return (
@@ -347,13 +354,13 @@ export default function BookWizard({ onSendToEditor }: BookWizardProps) {
             <LoadOutlineModal
                 isOpen={isLoadModalOpen}
                 onClose={() => setIsLoadModalOpen(false)}
-                onLoad={handleLoadOutline}
+                onLoad={handleLoadBook}
             />
 
             <SavedFilesModal
                 isOpen={isSavedFilesModalOpen}
                 onClose={() => setIsSavedFilesModalOpen(false)}
-                onLoad={handleLoadOutline}
+                onLoad={handleLoadBook}
             />
         </div>
     )

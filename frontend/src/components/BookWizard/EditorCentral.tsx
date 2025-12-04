@@ -95,6 +95,7 @@ export default function EditorCentral({ content = '', onContentChange, onOpenSav
     if (currentBook) {
       const updated = {
         ...currentBook,
+        content: html, // Salvar conteúdo completo
         last_modified: new Date().toISOString(),
         last_saved: new Date().toISOString()
       }
@@ -116,74 +117,6 @@ export default function EditorCentral({ content = '', onContentChange, onOpenSav
     }
   }
 
-  const handleSaveToDisk = () => {
-    if (!htmlContent) {
-      alert('Nenhum conteúdo para salvar')
-      return
-    }
-
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${currentBook?.title || 'documento'}.html`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    console.log('✓ Arquivo HTML salvo no dispositivo')
-  }
-
-  const handleExportPDF = (format: string = '1') => {
-    if (!htmlContent) {
-      alert('Nenhum conteúdo para exportar')
-      return
-    }
-
-    // Format is now passed directly, no prompt needed unless undefined
-    // But we expect the dropdown to pass 'pdf', 'rtf', 'docx', 'odt' or '1', '2', '3', '4'
-
-    if (!format) return
-
-    const fileName = currentBook?.title || 'documento'
-
-    switch (format) {
-      case 'pdf':
-      case '1':
-        // PDF export
-        const printWindow = window.open('', '_blank')
-        if (printWindow) {
-          printWindow.document.write(`<html><head><title>${fileName}</title></head><body>`)
-          printWindow.document.write(htmlContent)
-          printWindow.document.write('</body></html>')
-          printWindow.document.close()
-          printWindow.print()
-        }
-        break
-      case 'rtf':
-      case '2':
-        // RTF export (simplified HTML to RTF conversion)
-        const rtfContent = `{\\rtf1\\ansi\\deff0 ${htmlContent.replace(/<[^>]*>/g, '')}}`
-        const rtfBlob = new Blob([rtfContent], { type: 'application/rtf' })
-        const rtfUrl = URL.createObjectURL(rtfBlob)
-        const rtfLink = document.createElement('a')
-        rtfLink.href = rtfUrl
-        rtfLink.download = `${fileName}.rtf`
-        rtfLink.click()
-        URL.revokeObjectURL(rtfUrl)
-        break
-      case 'docx':
-      case '3':
-      case 'odt':
-      case '4':
-        alert('Exportação DOCX/ODT: Use "Salvar como HTML" e abra no Word/LibreOffice para converter')
-        handleSaveToDisk()
-        break
-      default:
-        alert('Formato inválido')
-    }
-  }
-
   // Detectar se é Markdown e converter
   const isMarkdown = content && (content.includes('##') || content.includes('**'))
   const htmlContent = isMarkdown ? convertMarkdownToHTML(content) : content
@@ -192,23 +125,6 @@ export default function EditorCentral({ content = '', onContentChange, onOpenSav
   console.log('  content (raw):', content ? `${content.length} chars` : 'vazio')
   console.log('  isMarkdown:', isMarkdown)
   console.log('  htmlContent:', htmlContent ? `${htmlContent.length} chars` : 'vazio')
-
-  // Se não há conteúdo, mostrar mensagem vazia
-  // if (!htmlContent) {
-  //   return (
-  //     <div className="editor-central">
-  //       <div className="editor-header">
-  //         <h2>Editor de Conteúdo</h2>
-  //       </div>
-  //       <div className="editor-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-  //         <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-  //           <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Nenhum conteúdo gerado ainda</p>
-  //           <p style={{ fontSize: '0.9rem' }}>Selecione um capítulo na sidebar e gere conteúdo para visualizá-lo aqui</p>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   )
-  // }
 
   return (
     <div className="editor-central">
@@ -250,8 +166,6 @@ export default function EditorCentral({ content = '', onContentChange, onOpenSav
           }}
           onAutoSave={handleAutoSave}
           onOpen={handleOpenFiles}
-          onSave={handleSaveToDisk}
-          onExport={(format) => handleExportPDF(format)}
         />
       </div>
     </div>

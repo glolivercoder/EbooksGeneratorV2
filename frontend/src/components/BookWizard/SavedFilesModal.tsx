@@ -1,27 +1,17 @@
 import { useState, useEffect } from 'react'
 import { X, BookOpen, Trash2, Clock } from 'lucide-react'
-import { useBookStore } from '../../stores/bookStore'
+import { useBookStore, BookData } from '../../stores/bookStore'
 import './SavedFilesModal.css'
-
-interface SavedFile {
-    id: string
-    title: string
-    description: string
-    total_chapters: number
-    created_at: string
-    last_modified: string
-    last_saved?: string
-}
 
 interface SavedFilesModalProps {
     isOpen: boolean
     onClose: () => void
-    onLoad: (fileData: any) => void
+    onLoad: (fileData: BookData) => void
 }
 
 export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesModalProps) {
     const { currentBook, savedBooks, deleteFromLibrary } = useBookStore()
-    const [files, setFiles] = useState<SavedFile[]>([])
+    const [files, setFiles] = useState<BookData[]>([])
 
     // Carregar arquivos salvos quando modal abre
     useEffect(() => {
@@ -30,9 +20,7 @@ export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesM
         }
     }, [isOpen, savedBooks])
 
-    // Função loadSavedFiles removida pois agora usamos o store direto
-
-    const handleLoad = (file: SavedFile) => {
+    const handleLoad = (file: BookData) => {
         console.log('SavedFilesModal - Carregando arquivo:', file.title)
         onLoad(file)
         onClose()
@@ -40,8 +28,10 @@ export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesM
 
     const handleDelete = (fileId: string) => {
         if (window.confirm('Deseja realmente deletar este arquivo?')) {
-            deleteFromLibrary(fileId)
-            console.log('✓ Arquivo deletado')
+            if(fileId){
+                deleteFromLibrary(fileId)
+                console.log('✓ Arquivo deletado')
+            }
         }
     }
 
@@ -109,7 +99,9 @@ export default function SavedFilesModal({ isOpen, onClose, onLoad }: SavedFilesM
                                         className="delete-btn"
                                         onClick={(e) => {
                                             e.stopPropagation()
-                                            handleDelete(file.id)
+                                            if(file.id){
+                                                handleDelete(file.id)
+                                            }
                                         }}
                                     >
                                         <Trash2 size={18} />

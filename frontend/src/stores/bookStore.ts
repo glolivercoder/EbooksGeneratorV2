@@ -22,6 +22,7 @@ export interface BookData {
   last_modified: string
   last_saved?: string
   status: 'draft' | 'in_progress' | 'completed'
+  content?: string // Conteúdo completo do livro (HTML)
 }
 
 interface BookStore {

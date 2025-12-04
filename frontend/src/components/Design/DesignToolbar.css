@@ -1,0 +1,20 @@
+.design-toolbar {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.toolbar-section {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toolbar-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
