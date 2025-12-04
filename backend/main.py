@@ -757,6 +757,10 @@ app.include_router(backup_router)
 app.include_router(templates_router, prefix="/api", tags=["templates"])
 app.include_router(diagrams_router, prefix="/api", tags=["diagrams"])
 
+# Design routes
+from routes.design_routes import router as design_router
+app.include_router(design_router)
+
 # ==================== OpenRouter Models Endpoint ====================
 
 @app.get("/api/openrouter/models")
