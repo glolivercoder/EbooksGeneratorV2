@@ -186,7 +186,13 @@ AGORA GERE O CODIGO (apenas o codigo, sem explicacoes):"""
         
         for line in lines:
             # Para quando encontrar texto explicativo
-            if line.strip() and not line.strip().startswith(("graph", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey")):
+            valid_diagram_starts = (
+                "graph", "sequenceDiagram", "gantt", "classDiagram", 
+                "stateDiagram", "pie", "erDiagram", "journey",
+                "xychart-beta", "xychart", "mindmap", "timeline", "quadrantChart"
+            )
+            
+            if line.strip() and not line.strip().startswith(valid_diagram_starts):
                 # Check if it's a valid Mermaid line
                 if any(char in line for char in ["-->", "->", "|", ":", "{", "}"]):
                     clean_lines.append(line)
@@ -206,7 +212,8 @@ AGORA GERE O CODIGO (apenas o codigo, sem explicacoes):"""
         # Check if starts with valid diagram type
         valid_starts = [
             "graph", "sequenceDiagram", "gantt", "classDiagram",
-            "stateDiagram", "pie", "erDiagram", "journey"
+            "stateDiagram", "pie", "erDiagram", "journey",
+            "xychart-beta", "xychart", "mindmap", "timeline", "quadrantChart"
         ]
         
         first_line = code.split("\n")[0].strip()
@@ -232,6 +239,14 @@ AGORA GERE O CODIGO (apenas o codigo, sem explicacoes):"""
             return "pie"
         elif first_line.startswith("erdiagram"):
             return "er"
+        elif first_line.startswith("xychart"):
+            return "xychart"
+        elif first_line.startswith("mindmap"):
+            return "mindmap"
+        elif first_line.startswith("timeline"):
+            return "timeline"
+        elif first_line.startswith("quadrantchart"):
+            return "quadrant"
         else:
             return "unknown"
     

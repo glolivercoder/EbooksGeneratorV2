@@ -24,6 +24,7 @@ import FreepikModal from './FreepikModal'
 import './TipTapEditor.css'
 import './TipTapExtensions.css'
 import './MermaidStyles.css'
+import { MermaidExtension } from './extensions/MermaidExtension'
 
 import { FolderOpen, Save, FileDown, Table2, LineChart, Quote, Sparkles, Wand2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -115,11 +116,25 @@ export default function TipTapEditor({
     Inativo --> Ativo: iniciar
     Ativo --> Inativo: parar
     Ativo --> [*]`,
+    xychart: `xychart-beta
+    title "Vendas por Trimestre"
+    x-axis [Q1, Q2, Q3, Q4]
+    y-axis "Receita (k)" 0 --> 100
+    bar [45, 78, 92, 65]
+    line [40, 70, 85, 60]`,
   }
 
   const insertMermaidChart = (type: keyof typeof mermaidTemplates) => {
     const template = mermaidTemplates[type]
-    editor?.chain().focus().insertContent(`\n\`\`\`mermaid\n${template}\n\`\`\`\n`).run()
+    editor?.chain().focus().insertContent({
+      type: 'mermaid',
+      content: [
+        {
+          type: 'text',
+          text: template
+        }
+      ]
+    }).run()
     setShowMermaidDropdown(false)
   }
 
@@ -172,6 +187,7 @@ export default function TipTapEditor({
       TableRow,
       TableHeader,
       TableCell,
+      MermaidExtension,
     ],
     content,
     editable,
@@ -254,7 +270,18 @@ export default function TipTapEditor({
 
       const data = await response.json()
 
-      editor?.chain().focus().insertContent(`\n${data.mermaid_code}\n`).run()
+      // Remove markdown code block wrapper if present
+      const cleanCode = data.mermaid_code.replace(/^```mermaid\n/, '').replace(/\n```$/, '')
+
+      editor?.chain().focus().insertContent({
+        type: 'mermaid',
+        content: [
+          {
+            type: 'text',
+            text: cleanCode
+          }
+        ]
+      }).run()
 
       toast.success(`Diagrama gerado! Custo: $${data.cost.toFixed(4)}`, { id: 'diagram-gen' })
       setShowMermaidAIModal(false)
