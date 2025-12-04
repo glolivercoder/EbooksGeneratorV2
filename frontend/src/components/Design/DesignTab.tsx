@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { Palette, Type, Layout, Image, Layers, Sparkles } from 'lucide-react'
+import { Palette, Type, Layout, Image, Layers, Sparkles, Settings } from 'lucide-react'
 import DesignCanvas from './DesignCanvas'
 import DesignToolbar from './DesignToolbar'
 import DesignSidebar from './DesignSidebar'
+import ModelPicker from './ModelPicker'
+import ImageUploader from './ImageUploader'
 import { analyzeContent, DesignAnalysis } from '../../services/designService'
 import { useDesignStore } from '../../stores/designStore'
+import { ModelInfo } from '../../services/modelService'
 import './DesignTab.css'
 
 interface DesignTabProps {
@@ -14,7 +17,10 @@ interface DesignTabProps {
 export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
     const [activeSidebarTab, setActiveSidebarTab] = useState<'colors' | 'typography' | 'layout' | 'images' | 'layers'>('colors')
     const [isAnalyzing, setIsAnalyzing] = useState(false)
-    const [analysis, setAnalysis] = useState<DesignAnalysis | null>(null)
+    const [showAdvanced, setShowAdvanced] = useState(false)
+    const [selectedModel, setSelectedModel] = useState<ModelInfo | undefined>()
+    const [customPrompt, setCustomPrompt] = useState('')
+    const [referenceImage, setReferenceImage] = useState<string | null>(null)
     const { updateColors, updateTypography } = useDesignStore()
 
     const handleExportToEditor = (html: string) => {
@@ -26,11 +32,10 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
     const handleGenerateWithAI = async () => {
         setIsAnalyzing(true)
         try {
-            // Simular pegar conteúdo do editor (TODO: integrar com editor real)
-            const editorContent = "Livro sobre desenvolvimento web moderno com React, TypeScript e boas práticas de UX/UI design."
+            // Usar prompt customizado ou conteúdo padrão
+            const content = customPrompt || "Livro sobre desenvolvimento web moderno com React, TypeScript e boas práticas de UX/UI design."
 
-            const result = await analyzeContent(editorContent)
-            setAnalysis(result)
+            const result = await analyzeContent(content)
 
             // Aplicar sugestões automaticamente
             if (result.color_palette && result.color_palette.length >= 4) {
@@ -50,7 +55,7 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
                 })
             }
 
-            alert(`✨ Design gerado com IA!\n\nEstilo: ${result.suggested_style}\nTom: ${result.tone}\nMood: ${result.mood}`)
+            alert(`✨ Design gerado com IA!\n\nModelo: ${selectedModel?.name || 'Padrão'}\nEstilo: ${result.suggested_style}\nTom: ${result.tone}\nMood: ${result.mood}`)
         } catch (error) {
             console.error('Erro ao gerar design:', error)
             alert('Erro ao gerar design com IA. Verifique se o backend está rodando.')
@@ -59,22 +64,63 @@ export default function DesignTab({ onApplyToEditor }: DesignTabProps) {
         }
     }
 
+    const handleImageSelect = (file: File, dataUrl: string) => {
+        setReferenceImage(dataUrl)
+        // TODO: Extrair cores da imagem
+        console.log('Imagem de referência selecionada:', file.name)
+    }
+
     return (
         <div className="design-tab">
             <div className="design-header">
-                <div>
+                <div className="header-title">
                     <h2>🎨 Design</h2>
                     <p>Crie capas e templates visuais profissionais para seu ebook</p>
                 </div>
-                <button
-                    className="ai-generate-btn"
-                    onClick={handleGenerateWithAI}
-                    disabled={isAnalyzing}
-                >
-                    <Sparkles size={18} />
-                    {isAnalyzing ? 'Gerando...' : 'Gerar com IA'}
-                </button>
+                <div className="header-controls">
+                    <ModelPicker
+                        onModelSelect={setSelectedModel}
+                        selectedModel={selectedModel}
+                    />
+                    <button
+                        className={`advanced-btn ${showAdvanced ? 'active' : ''}`}
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                        title="Configurações Avançadas"
+                    >
+                        <Settings size={18} />
+                    </button>
+                    <button
+                        className="ai-generate-btn"
+                        onClick={handleGenerateWithAI}
+                        disabled={isAnalyzing}
+                    >
+                        <Sparkles size={18} />
+                        {isAnalyzing ? 'Gerando...' : 'Gerar com IA'}
+                    </button>
+                </div>
             </div>
+
+            {showAdvanced && (
+                <div className="advanced-panel">
+                    <div className="advanced-section">
+                        <label>Prompt Customizado</label>
+                        <textarea
+                            value={customPrompt}
+                            onChange={(e) => setCustomPrompt(e.target.value)}
+                            placeholder="Descreva o estilo visual desejado (ex: 'Minimalista, tons pastéis, fonte serifada elegante')..."
+                            rows={3}
+                        />
+                    </div>
+                    <div className="advanced-section">
+                        <label>Imagem de Referência (Cores)</label>
+                        <ImageUploader
+                            onImageSelect={handleImageSelect}
+                            currentImage={referenceImage || undefined}
+                            onRemove={() => setReferenceImage(null)}
+                        />
+                    </div>
+                </div>
+            )}
 
             <div className="design-layout">
                 {/* Sidebar */}

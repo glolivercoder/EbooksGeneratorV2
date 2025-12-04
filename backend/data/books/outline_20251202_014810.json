@@ -1,6 +1,6 @@
 {
   "id": "outline_20251202_014810",
-  "title": "Crie uma ebook de receitas low... - 04/12/2025 09:40",
+  "title": "Crie uma ebook de receitas low... - 04/12/2025 13:55",
   "description": "Crie uma ebook de receitas lowcarb com os cálculos calóricos dos nutrientes e das porções com 1 capitulo e 1 pagina",
   "optimized_prompt": "Crie uma ebook de receitas lowcarb com os cálculos calóricos dos nutrientes e das porções com 1 capitulo e 1 pagina",
   "total_chapters": 1,
@@ -20,8 +20,8 @@
     }
   ],
   "created_at": "2025-12-02T01:48:10.859Z",
-  "last_modified": "2025-12-04T12:40:06.354Z",
-  "last_saved": "2025-12-04T12:40:06.663Z",
+  "last_modified": "2025-12-04T16:55:05.970Z",
+  "last_saved": "2025-12-04T16:55:06.271Z",
   "status": "in_progress",
-  "content": "<table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr></tbody></table><p></p>"
+  "content": "<p style=\"text-align: justify;\"></p><p></p>"
 }

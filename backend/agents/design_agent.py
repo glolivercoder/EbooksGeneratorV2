@@ -63,7 +63,7 @@ class DesignAgent:
                 "typography": Dict
             }
         """
-        from services.llm_service import get_llm_response
+        from services.llm_client import llm_client, TaskType
         
         prompt = f"""
 Analise o seguinte conteúdo de ebook e sugira um design visual apropriado.
@@ -97,13 +97,20 @@ Retorne APENAS o JSON, sem comentários adicionais.
 """
         
         try:
-            response = await get_llm_response(
-                prompt=prompt,
-                system_prompt=self.system_prompt,
+            # Concatenar system prompt pois llm_client não suporta arg separado
+            full_prompt = f"{self.system_prompt}\n\n{prompt}"
+            
+            response_dict = await llm_client.generate(
+                prompt=full_prompt,
+                task_type=TaskType.ANALYSIS,
                 model=settings.generation_model
             )
             
             # Parse JSON response
+            response = response_dict["content"]
+            # Limpar markdown code blocks se houver
+            response = response.replace("```json", "").replace("```", "").strip()
+            
             analysis = json.loads(response)
             return analysis
             
@@ -146,7 +153,7 @@ Retorne APENAS o JSON, sem comentários adicionais.
                 "suggestions": List[str]
             }
         """
-        from services.llm_service import get_llm_response
+        from services.llm_client import llm_client, TaskType
         
         colors = analysis.get("color_palette", [])
         typography = analysis.get("typography", {})
@@ -180,11 +187,16 @@ Retorne APENAS o JSON.
 """
         
         try:
-            response = await get_llm_response(
-                prompt=prompt,
-                system_prompt=self.system_prompt,
+            full_prompt = f"{self.system_prompt}\n\n{prompt}"
+            
+            response_dict = await llm_client.generate(
+                prompt=full_prompt,
+                task_type=TaskType.GENERATION,
                 model=settings.generation_model
             )
+            
+            response = response_dict["content"]
+            response = response.replace("```json", "").replace("```", "").strip()
             
             cover_design = json.loads(response)
             return cover_design
